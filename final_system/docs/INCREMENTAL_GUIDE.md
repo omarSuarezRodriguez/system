@@ -205,3 +205,27 @@ python -m api.main   # con .env y migrate_db
 ```
 
 **Métrica de éxito:** junior arranca API + app con README, ve chats, responde, confirma pedidos, da de alta negocio y edita bot solo desde Flutter — sin UI web.
+
+---
+
+## Mejora incremental — Alertas tipo WhatsApp ✅
+
+**Hecho (solo Flutter `whatsbot_app/`):**
+
+- [x] `lib/services/message_alerts_service.dart` — sonido + vibración + notificaciones locales al llegar mensajes entrantes
+- [x] Sonido corto en primer plano (`audioplayers`) y en canal Android (`res/raw/incoming_message.wav`)
+- [x] Notificación del sistema si la app está en segundo plano o en otro chat (como WhatsApp)
+- [x] Sin banner si el dueño ya está viendo ese chat; con sonido igualmente
+- [x] Lista de chats: preview en negrita, hora verde y punto de no leído
+- [x] Tap en notificación abre el chat correspondiente
+- [x] Permisos Android `POST_NOTIFICATIONS` + `VIBRATE`; iOS delegado en `AppDelegate`
+
+```bash
+cd final_system/whatsbot_app
+flutter pub get
+flutter analyze
+cd ..
+python scripts/validate_chatbot.py
+```
+
+**Probar:** login → dejar app abierta en lista de chats → enviar WhatsApp al bot → suena y aparece notificación; abrir el chat → nuevo mensaje suena sin banner; minimizar app → notificación en bandeja del sistema.

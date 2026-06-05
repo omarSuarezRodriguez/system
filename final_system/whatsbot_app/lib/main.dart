@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'screens/chats_list_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/api_client.dart';
+import 'services/message_alerts_service.dart';
 import 'theme/whatsapp_theme.dart';
+import 'widgets/app_lifecycle_observer.dart';
 
-void main() {
+final navigatorKey = GlobalKey<NavigatorState>();
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await messageAlerts.init();
   runApp(const WhatsBotApp());
 }
 
@@ -15,11 +20,14 @@ class WhatsBotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WhatsBot',
-      debugShowCheckedModeBanner: false,
-      theme: WhatsAppTheme.light(),
-      home: const SplashGate(),
+    return AppLifecycleObserver(
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'WhatsBot',
+        debugShowCheckedModeBanner: false,
+        theme: WhatsAppTheme.light(),
+        home: const SplashGate(),
+      ),
     );
   }
 }

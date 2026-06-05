@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_client.dart';
+import '../services/message_alerts_service.dart';
 import '../theme/whatsapp_theme.dart';
 import 'chats_list_screen.dart';
 
@@ -34,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _businessController.text.trim(),
         _pinController.text,
       );
+      messageAlerts.seedFromLogin();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const ChatsListScreen()),

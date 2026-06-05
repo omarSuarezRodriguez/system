@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../config/api_config.dart';
 import '../models/conversation.dart';
+import '../main.dart';
 import '../services/api_client.dart';
+import '../services/message_alerts_service.dart';
 import '../theme/whatsapp_theme.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
@@ -26,6 +28,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   @override
   void initState() {
     super.initState();
+    messageAlerts.onOpenConversation = _openConversationById;
     _load();
     _refreshTimer = Timer.periodic(ApiConfig.chatsRefreshInterval, (_) {
       _load(silent: true);
@@ -34,8 +37,36 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
 
   @override
   void dispose() {
+    messageAlerts.onOpenConversation = null;
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _openConversationById(int conversationId) async {
+    Conversation? chat;
+    for (final item in _conversations) {
+      if (item.id == conversationId) {
+        chat = item;
+        break;
+      }
+    }
+    if (chat == null) {
+      await _load(silent: true);
+      for (final item in _conversations) {
+        if (item.id == conversationId) {
+          chat = item;
+          break;
+        }
+      }
+    }
+    if (chat == null || !mounted) return;
+
+    final nav = navigatorKey.currentState;
+    if (nav == null) return;
+    await nav.push(
+      MaterialPageRoute(builder: (_) => ChatScreen(conversation: chat!)),
+    );
+    if (mounted) _load(silent: true);
   }
 
   Future<void> _load({bool silent = false}) async {
@@ -52,6 +83,8 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
         _conversations = list;
         _loading = false;
       });
+      await messageAlerts.handleConversations(list);
+      if (mounted) setState(() {});
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -137,6 +170,8 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
                           ),
                           itemBuilder: (context, index) {
                             final chat = _conversations[index];
+                            final unread =
+                                messageAlerts.isConversationUnread(chat);
                             return ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: WhatsAppTheme.accentGreen,
@@ -151,22 +186,52 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
                                 chat.displayName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontWeight: unread
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                ),
                               ),
                               subtitle: Text(
                                 chat.lastMessagePreview ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: WhatsAppTheme.subtitleGrey,
+                                style: TextStyle(
+                                  color: unread
+                                      ? Colors.black87
+                                      : WhatsAppTheme.subtitleGrey,
+                                  fontWeight:
+                                      unread ? FontWeight.w600 : FontWeight.normal,
                                 ),
                               ),
-                              trailing: Text(
-                                _formatTime(chat.lastMessageAt),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: WhatsAppTheme.subtitleGrey,
-                                ),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    _formatTime(chat.lastMessageAt),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: unread
+                                          ? WhatsAppTheme.accentGreen
+                                          : WhatsAppTheme.subtitleGrey,
+                                      fontWeight: unread
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                  if (unread) ...[
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: const BoxDecoration(
+                                        color: WhatsAppTheme.accentGreen,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                               onTap: () async {
                                 await Navigator.of(context).push(

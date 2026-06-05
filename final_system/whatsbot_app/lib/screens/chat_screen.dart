@@ -7,6 +7,7 @@ import '../models/conversation.dart';
 import '../models/message.dart';
 import '../models/order.dart';
 import '../services/api_client.dart';
+import '../services/message_alerts_service.dart';
 import '../theme/whatsapp_theme.dart';
 import '../widgets/message_bubble.dart';
 import 'order_actions_bar.dart';
@@ -33,6 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    messageAlerts.setActiveConversation(widget.conversation.id);
     _refresh();
     _pollTimer = Timer.periodic(ApiConfig.chatPollInterval, (_) {
       _refresh(silent: true);
@@ -41,6 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    messageAlerts.setActiveConversation(null);
     _pollTimer?.cancel();
     _inputController.dispose();
     _scrollController.dispose();
@@ -67,6 +70,11 @@ class _ChatScreenState extends State<ChatScreen> {
         _pendingOrder = match;
         _loading = false;
       });
+      await messageAlerts.handleChatMessages(
+        conversationId: widget.conversation.id,
+        displayName: widget.conversation.displayName,
+        messages: messages,
+      );
       _scrollToBottom();
     } catch (_) {
       if (!mounted) return;
