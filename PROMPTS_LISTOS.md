@@ -393,6 +393,7 @@ MEJORA: [una frase]
 REGLAS:
 - Cambio mínimo
 - Si es UI → solo Flutter (whatsbot_app/)
+- Si es un cambio solo de la app flutter -> solo flutter (whatsbot_app/)
 - Actualizar docs/INCREMENTAL_GUIDE.md
 - validate_chatbot.py al final
 ```

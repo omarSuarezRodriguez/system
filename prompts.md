@@ -1414,6 +1414,210 @@ ok entonces deja /final_system independiente sin depender de nada, osea no rompa
 
 ## res cursor ## 
 
+Listo. `final_system` queda autocontenido; puedes borrar manualmente todo lo que esté fuera sin romper el sistema.
+
+## Cambios hechos
+
+1. **`REPO_ROOT`** — Ahora es `final_system` (antes apuntaba a `System/`). Los logs van a `final_system/client_messages_log/`.
+
+2. **`flows/restaurant_flow.json`** — Copiado desde la raíz. Tu `.env` ya tenía `FLOWS_PATH=flows/restaurant_flow.json`, así que el flujo del bot resuelve bien dentro de `final_system`.
+
+3. **`migrate_db.py`** — Eliminado el fallback que buscaba `menu_cache.json` en `System/data/`.
+
+4. **`.env.example`** — `FLOWS_PATH` actualizado a `flows/restaurant_flow.json` (sin `../`).
+
+5. **Logs existentes** — Si había `client_messages_log/` en la raíz, se copió a `final_system/client_messages_log/`.
+
+## Qué puedes borrar fuera sin problema
+
+- `app/`, `run.py`, `flows/`, `data/`, `credentials/` de la raíz (si ya usas los de `final_system`)
+- README, `prompts.md`, scripts legacy, etc.
+
+## Qué conservar / usar
+
+Trabaja siempre desde `final_system/`:
+
+```bash
+cd final_system
+python -m api.main
+```
+
+Y Flutter desde `final_system/whatsbot_app`.
+
+**Nota:** Si mueves solo la carpeta `final_system` a otro sitio (por ejemplo `Desktop/final_system`), sigue funcionando; todas las rutas son relativas a esa carpeta.
+
+
+
+
+## cuarto prompt ##
+
+Listo entonces todo lo que está por fuera de /final_system que no sirva, borralo a excepción de los .md , antes de borrar, dime qué vas a borrar y pideme confirmación, también dime archivo por archivo si afecta a /final_system o no
+
+
+## resp cursor ##
+
+
+Aquí va el inventario. **No borré nada**; espero tu confirmación.
+
+---
+
+## Se conserva (no se toca)
+
+| Elemento | Motivo |
+|----------|--------|
+| **`final_system/`** | Sistema activo |
+| **Todos los `.md` en la raíz** | Pediste conservarlos: `README.md`, `README_PROMPTS.md`, `prompts.md`, `PROMPTS_LISTOS.md`, `PROMPT_EVOLUCION_SAAS_WHATSBOT.md`, `PROMPT_WHATSBOT_SAAS.md`, `AI_RULES.md`, `pendientes.md`, `PRECIOS.md` |
+| **`.md` dentro de `data/`** (si borramos el resto de esa carpeta) | Mismo criterio: `parser_whatsapp_manual_10.md`, `parser_phase3_report.md`, `parser_corpus_95_summary.md`, `parser_corpus_95_benchmark_report.md` |
+
+---
+
+## Propuesta de borrado (carpetas)
+
+| Carpeta | ¿Afecta `final_system`? | Notas |
+|---------|-------------------------|--------|
+| **`app/`** (15 archivos Python + `menu_cache.json`) | **No** | Bot Flask legacy; duplicado de `final_system/chatbot/app/` |
+| **`scripts/`** (18 scripts de benchmark/verify) | **No** | Scripts del bot viejo; `final_system/scripts/` es otro |
+| **`flows/`** (`restaurant_flow.json`) | **No** | Copia ya en `final_system/flows/` |
+| **`credentials/`** (`google-service-account.json`) | **No** | Copia en `final_system/credentials/` |
+| **`data/`** (solo lo que no es `.md`) | **No** | Cachés/benchmarks legacy; runtime usa `final_system/data/` |
+| **`client_messages_log/`** (2 `.txt`) | **No** | Copia en `final_system/client_messages_log/` |
+
+---
+
+## Propuesta de borrado (archivos sueltos en raíz)
+
+| Archivo | ¿Afecta `final_system`? |
+|---------|-------------------------|
+| **`.env.example`** | **No** — plantilla del bot viejo; la activa es `final_system/.env.example` |
+| **`.gitignore`** | **No** — del repo raíz legacy |
+| **`Activate venv.txt`** | **No** — nota local |
+| **`client_messages_log.txt`** | **No** — log suelto legacy |
+| **`Dockerfile`** | **No** — deploy del bot raíz |
+| **`guardar.py`** | **No** — utilidad suelta |
+| **`railway.toml`** | **No** |
+| **`render.yaml`** | **No** |
+| **`requirements.txt`** | **No** — deps del bot raíz; las de SaaS están en `final_system/requirements.txt` |
+| **`run.py`** | **No** — arranque Flask legacy |
+| **`runall.py`** | **No** |
+
+---
+
+## Detalle por carpeta (archivo a archivo)
+
+### `app/` — todo **No** afecta `final_system`
+
+- `app.py`, `config.py`, `__init__.py`
+- `core/flow_engine.py`, `core/parser.py`, `core/state_manager.py`, `core/__init__.py`
+- `data/menu_cache.json`
+- `integrations/google_sheets.py`, `integrations/__init__.py`
+- `services/*` (admin, blocked_users, menu, order, reservation, user + `__init__.py`)
+- `utils/client_message_log.py`, `utils/validators.py`, `utils/__init__.py`
+
+### `scripts/` — todo **No**
+
+- `verify_phone_send.py`, `verify_phone_international.py`, `verify_deployment.py`, `verify_admin_flow.py`, `verify_blocked_users.py`
+- `simulate_conversation.py`, `test_invented_data.py`, `run_parser_stress.py`, `measure_parser_latency.py`, `regression_checklist.py`, `measure_latency.py`
+- `generate_cotidianas_2000.py`, `diagnose_twilio_whatsapp.py`, `generate_corpus_95.py`, `compare_parser_stress.py`
+- `benchmark_phase3.py`, `benchmark_corpus_95.py`, `benchmark_before_after.py`
+
+### `flows/` — **No**
+
+- `restaurant_flow.json`
+
+### `credentials/` — **No**
+
+- `google-service-account.json` (si existe; duplicado en `final_system/credentials/`)
+
+### `data/` — **No** (borrar solo no-`.md`)
+
+| Archivo | ¿Afecta? |
+|---------|----------|
+| `.gitkeep` | No |
+| `menu_cache.json`, `orders_cache.json`, `reservations_cache.json`, `users_cache.json` | No |
+| `parser_errors.jsonl`, `latency_report.json`, `benchmark_before_after.json` | No |
+| Todos los `.csv`, `.txt` de stress/benchmark | No |
+| Los 4 `.md` listados arriba | **Se conservan** |
+
+### `client_messages_log/` — **No**
+
+- `client_messages_log.txt`
+- `client_messages_log_35699155990.txt`
+
+---
+
+## Caso aparte: `.git/` (~599 archivos)
+
+| Elemento | ¿Afecta `final_system` en runtime? |
+|----------|-------------------------------------|
+| **`.git/`** | **No** al ejecutar API/Flutter |
+
+Sí afecta **historial Git** del proyecto en `System/`. `final_system` no tiene su propio `.git`.
+
+**Opciones:**
+- **A)** Borrar `.git/` junto con el resto → pierdes historial en esta carpeta (puedes iniciar repo nuevo solo en `final_system` después).
+- **B)** **No borrar** `.git/` → conservas historial aunque quede casi vacío el repo.
+
+Indica **A** o **B** en tu confirmación.
+
+---
+
+## Resumen
+
+- **~680 archivos/carpetas** propuestos para borrar (sin contar `.md` ni `final_system`).
+- **9 `.md` en raíz** + **4 `.md` en `data/`** se quedan.
+- Tras los cambios de independencia, **ninguno de los listados es requerido por `final_system`**.
+
+---
+
+## Confirmación
+
+Responde algo como:
+
+1. **«Sí, borra todo lo listado»** (+ **A** o **B** para `.git`)
+2. O ajustes: *«no borres X»*, *«sí borra también Y»*
+
+Cuando confirmes, ejecuto el borrado.
+
+
+
+
+## quinto prompt ## 
+
+«Sí, borra todo lo listado» + B
+
+
+## res cursor ##
+
+Listo. Borrado según tu confirmación (**B** = `.git/` conservado).
+
+## Eliminado
+
+- Carpetas: `app/`, `scripts/`, `flows/`, `credentials/`, `client_messages_log/`
+- En `data/`: todo excepto los 4 `.md` de benchmarks
+- Archivos raíz: `.env.example`, `.gitignore`, `Activate venv.txt`, `client_messages_log.txt`, `Dockerfile`, `guardar.py`, `railway.toml`, `render.yaml`, `requirements.txt`, `run.py`, `runall.py`
+
+## Lo que queda en `System/`
+
+```
+.git
+final_system/
+data/          (solo 4 .md de informes)
+AI_RULES.md
+pendientes.md
+PRECIOS.md
+prompts.md
+PROMPTS_LISTOS.md
+PROMPT_EVOLUCION_SAAS_WHATSBOT.md
+PROMPT_WHATSBOT_SAAS.md
+README.md
+README_PROMPTS.md
+```
+
+`final_system` sigue resolviendo rutas correctamente (flujo y `REPO_ROOT` verificados). Para trabajar: `cd final_system` y arrancar API/Flutter desde ahí.
+
+
+
+
 
 
 
