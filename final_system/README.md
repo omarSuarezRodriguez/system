@@ -49,6 +49,24 @@ python scripts/validate_api.py
 
 El bot legacy en la raíz (`python run.py`) sigue operativo en paralelo.
 
+## Multi-negocio (Fase 5)
+
+```bash
+python scripts/migrate_db.py          # SQLite local (data/whatsbot.db)
+python scripts/migrate_db.py --postgres  # Usar DATABASE_URL del .env
+python scripts/onboard_business.py --default
+```
+
+| Método | Ruta |
+|--------|------|
+| GET | `/businesses` |
+| GET | `/businesses/{id}/intents` |
+| GET | `/businesses/{id}/prompts` |
+| GET/PUT | `/businesses/{id}/menu` |
+| GET/POST | `/businesses/{id}/orders` |
+
+Webhook resuelve `business_id` desde el campo Twilio **To** (= `twilio_whatsapp_from` del negocio).
+
 ## App WhatsBot (Flutter — Fase 9)
 
 ```bash

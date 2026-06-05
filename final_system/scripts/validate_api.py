@@ -36,11 +36,14 @@ def main() -> int:
         print(f"  FAIL GET /health - {r.status_code}")
         failures += 1
 
+    from config.settings import TWILIO_WHATSAPP_FROM
+
     r = client.post(
         "/webhook",
         data={
             "WaId": "573009999999",
             "From": "whatsapp:+573009999999",
+            "To": TWILIO_WHATSAPP_FROM or "whatsapp:+573242497352",
             "Body": "menu",
             "ProfileName": "API Test",
         },

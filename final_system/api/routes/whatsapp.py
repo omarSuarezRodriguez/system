@@ -22,13 +22,10 @@ from sqlalchemy.orm import Session
 
 from chatbot.gateway import handle_incoming_message
 from chatbot.runtime import get_bot_context
-from config.settings import (
-    DEFAULT_BUSINESS_ID,
-    RESTAURANT_NAME,
-    use_rest_webhook_replies,
-)
+from config.settings import RESTAURANT_NAME, use_rest_webhook_replies
 from infrastructure.database import get_db
 from infrastructure.twilio_client import build_twiml_response, deliver_reply
+from services.business_service import resolve_business_id_for_webhook
 from services.conversation_service import save_incoming_message, save_outgoing_message
 
 logger = logging.getLogger(__name__)
@@ -59,8 +56,14 @@ async def twilio_whatsapp_webhook(
     body = form.get("Body", "")
     profile_name = form.get("ProfileName", "")
     message_sid = form.get("MessageSid") or form.get("SmsMessageSid")
+    to_number = form.get("To", "")
 
-    business_id = DEFAULT_BUSINESS_ID
+    # Fase 5: TWILIO_WHATSAPP_FROM (campo To) → business_id
+    business_id = resolve_business_id_for_webhook(
+        db,
+        to_number=to_number,
+        from_number=from_number,
+    )
 
     # --- Persistir mensaje entrante (obligatorio Fase 4) ---
     incoming_wa = wa_id or from_number.replace("whatsapp:", "").strip()
@@ -141,10 +144,13 @@ async def twilio_whatsapp_webhook(
 
 
 @router.get("/webhook/health")
-async def webhook_health() -> dict[str, Any]:
+async def webhook_health(db: Session = Depends(get_db)) -> dict[str, Any]:
+    from services.business_service import get_default_business
+
+    default = get_default_business(db)
     return {
         "status": "ok",
         "route": "whatsapp",
         "restaurant": RESTAURANT_NAME,
-        "default_business_id": DEFAULT_BUSINESS_ID,
+        "default_business_id": default.id if default else None,
     }

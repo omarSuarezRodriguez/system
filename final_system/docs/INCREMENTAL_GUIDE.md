@@ -77,10 +77,22 @@
 
 ---
 
-## Fase 5 — Multi-negocio (pendiente)
+## Fase 5 — Multi-negocio ✅
+
+- [x] Models: `business`, `business_intents`, `business_prompts`, `menu`, `order`, `customer`
+- [x] Services: `business_service`, `menu_service`, `order_service`
+- [x] API: `/businesses`, `/businesses/{id}/menu`, `/businesses/{id}/orders`
+- [x] Webhook: `To` (Twilio) → `business_id` vía `twilio_whatsapp_from`
+- [x] Negocio `default` sembrado desde `.env` + `config/intents` + `config/prompts`
+- [x] `scripts/migrate_db.py`, `scripts/onboard_business.py`
+- [x] `validate_chatbot.py` → 0 fallos
 
 ---
 
-## Fases 6–10
+## Fase 6 — Pedidos + admin (pendiente)
+
+---
+
+## Fases 7–10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.

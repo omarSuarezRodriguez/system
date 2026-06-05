@@ -50,12 +50,11 @@ def get_session_factory() -> sessionmaker[Session]:
 
 def init_db() -> None:
     """Create tables for all registered models."""
-    import models.conversation  # noqa: F401
-    import models.message  # noqa: F401
+    import models  # noqa: F401 — registers all tables
 
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables ensured.")
+    logger.info("Database tables ensured (%d tables).", len(Base.metadata.tables))
 
 
 def get_db() -> Generator[Session, None, None]:
