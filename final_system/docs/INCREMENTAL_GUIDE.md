@@ -143,6 +143,27 @@ Con Sheets apagado el sistema funciona igual (PostgreSQL + chatbot con caché/de
 
 ---
 
-## Fases 9–10
+## Fase 9 — Flutter WhatsBot ✅
+
+- [x] `whatsbot_app/` — proyecto Flutter Android/iOS (sin Flutter Web como producto)
+- [x] UI tipo WhatsApp: header `#075E54`, chat `#ECE5DD`, burbujas `#DCF8C6` / blanco
+- [x] Pantallas: login, chats, chat, order approve/reject, ajustes
+- [x] Editores: menú, intents, mensajes (`GET/PUT /whatsbot/business/*`)
+- [x] `lib/services/api_client.dart` + `lib/config/api_config.dart` (`API_PUBLIC_URL` del `.env`)
+- [x] Polling chat 4 s / lista 8 s
+- [x] `docs/FLUTTER_APP.md`, `docs/GUIA_EDICION_APP.md` completos
+
+```bash
+cd final_system/whatsbot_app
+flutter pub get
+flutter analyze
+# No issues found!
+```
+
+Prueba manual: login → chat → enviar → aprobar pedido; Menú → guardar; Mensajes → bienvenida → guardar.
+
+---
+
+## Fase 10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.

@@ -1,7 +1,9 @@
 Aquí se irán pegando la respuesta de los prompts  de prompts_listos.md y cada versión será cada fase
 
 
-## v0.0
+
+## v0.00 @PROMPTS_LISTOS.md (40-50) Prompt 0 — Verificación al pegar el proyecto
+
 
 ## Verificación del proyecto WhatsBot
 
@@ -82,7 +84,7 @@ Aquí se irán pegando la respuesta de los prompts  de prompts_listos.md y cada 
 
 
 #################################################
-## v0.1 
+## v0.0 @PROMPTS_LISTOS.md (58-79)  Prompt 1 — Fase 0: Análisis (SIN tocar código)
 
 # Fase 0 — Análisis (sin cambios en código)
 
@@ -348,5 +350,493 @@ flowchart TD
 
 
 
+
+
+
+
+
+
+
+
+
+
 #################################################
-## v0.2 
+## v0.2 Prompt 2 — Fase 1: Scaffold
+
+## Fase 1 completada
+
+Se creó `final_system/` según el prompt maestro. **El bot en la raíz no se modificó** (sin gateway, sin copia de `app/`).
+
+### Creado
+
+| Elemento | Detalle |
+|----------|---------|
+| **Árbol** | `config/`, `docs/`, `chatbot/` (vacío + README), `api/`, `services/`, `models/`, `infrastructure/`, `scripts/`, `tests/`, `whatsbot_app/` (solo README Fase 9) |
+| **`config/*.py`** | 5 archivos con **GUÍA RÁPIDA** al final de cada uno |
+| **`.env.example`** | Todas las variables del mapa Fase 0 |
+| **`.env`** | Valores reales migrados desde raíz (Twilio, Admin, Sheets, cachés, recordatorios, `JWT_SECRET_KEY` ← `SECRET_KEY`, `DEFAULT_BUSINESS_NAME` ← `RESTAURANT_NAME`) |
+| **Google** | `credentials/google-service-account.json` copiado; path en `.env` |
+| **Docs** | `ARCHITECTURE.md`, `INCREMENTAL_GUIDE.md` (+ stubs WHATSAPP_FLOWS, FLUTTER_APP, guías) |
+| **`requirements.txt`**, **`.gitignore`**, **`README.md`** | Listos |
+
+### Mapeo legacy → `final_system/.env` (solo nombres)
+
+- `GOOGLE_SHEETS_CREDENTIALS_PATH` → `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
+- `RESTAURANT_NAME` → `DEFAULT_BUSINESS_NAME` (+ legacy name conservado en valor)
+- `SECRET_KEY` → `JWT_SECRET_KEY` (mismo valor)
+- Nuevos (sin legacy): `API_PUBLIC_URL`, `DATABASE_URL`, `REDIS_URL`, `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEET_ID_MENU` / `ORDERS`, `CORS_ORIGINS`
+- Twilio/Admin/Sheets TTL: **mismos nombres**, mismos valores
+
+`API_PUBLIC_URL` y `DEPLOY_URL`: `http://127.0.0.1:5000` (dev local).  
+`DATABASE_URL`: PostgreSQL local estándar (nuevo en SaaS; ajustar cuando tengas BD).
+
+### Intencionalmente pendiente
+
+- `chatbot/gateway.py` → **Fase 2**
+- Bot productivo → sigue en `python run.py` en la raíz
+
+---
+
+¿Procedo con la **Fase 2** (copiar chatbot + `gateway.py` + `validate_chatbot.py`)? Responde **Sí** para continuar.
+
+
+
+
+
+
+
+
+
+
+#################################################
+## v0.3 Prompt 3 — Fase 2: Gateway
+
+## Fase 2 completada
+
+### Hecho
+
+1. **Copia del chatbot** → `final_system/chatbot/app/` (el `app/` en la raíz sigue igual).
+2. **`chatbot/gateway.py`** → `handle_incoming_message(payload)` con la misma lógica que `POST /bot` (admin, bloqueados, `FlowEngine`, logs).
+3. **`business_id`** opcional en el payload (se devuelve sin alterar la lógica; multi-negocio en Fase 5+).
+4. **`chatbot/runtime.py`** — wiring de servicios (equivalente a `create_app()`).
+5. **`scripts/validate_chatbot.py`** — validación ejecutada.
+
+Ajustes mínimos solo de rutas en la copia: `config.py` usa `final_system/.env`, `DATA_DIR`, `FLOWS_PATH` → `flows/restaurant_flow.json` en la raíz.
+
+### Salida de `validate_chatbot.py`
+
+```
+=== validate_chatbot (Fase 2) ===
+
+  OK  import chatbot.gateway
+  OK  get_bot_context()
+  OK  hola -> respuesta (256 chars)
+  OK  menu -> incluye contenido de menu
+  OK  business_id passthrough
+  OK  admin -> is_admin + respuesta
+
+=== Resultado: 0 fallo(s) ===
+```
+
+### Uso del gateway
+
+```python
+from chatbot.gateway import handle_incoming_message
+
+result = handle_incoming_message({
+    "phone": "573001234567",
+    "message": "menu",
+    "business_id": "opcional",
+    "metadata": {"ProfileName": "Cliente"},
+})
+# result["response_text"], result["is_admin"], result["blocked"], ...
+```
+
+El bot en producción sigue en la raíz (`python run.py` → `POST /bot`).
+
+---
+
+¿Procedo con la **Fase 3** (centralizar hardcoded en `config/*`)? Responde **Sí** para continuar.
+
+
+
+
+
+
+#################################################
+## v0.4 Prompt 4 — Fase 3: Config centralizada
+
+## Fase 3 completada
+
+Configuración centralizada en `final_system/config/`; el chatbot usa `chatbot/app/config.py` como shim. El bot en la **raíz** no se tocó.
+
+### `validate_chatbot.py` — salida
+
+```
+=== validate_chatbot (Fase 2+) ===
+
+  OK  import chatbot.gateway
+  OK  get_bot_context()
+  OK  hola -> respuesta (256 chars)
+  OK  menu -> incluye contenido de menu
+  OK  business_id passthrough
+  OK  admin -> is_admin + respuesta
+
+=== Resultado: 0 fallo(s) ===
+```
+
+### Tabla: Antes → Ahora (15 ítems)
+
+| # | Antes (legacy) | Ahora (Fase 3) |
+|---|----------------|----------------|
+| 1 | `app/config.py` → `TWILIO_*`, `ADMIN_*` | `config/settings.py` + `.env` |
+| 2 | `app/config.py` → `RESTAURANT_NAME` | `config/settings.py` (`DEFAULT_BUSINESS_NAME` en `.env`) |
+| 3 | `app/config.py` → `STATE_PERSIST_PATH`, `PARSER_ERROR_LOG_PATH` | `config/settings.py` + `.env` |
+| 4 | `app/config.py` → `MENU/ORDERS/BLOCKED` cache TTL | `config/sheets_config.py` + `.env` |
+| 5 | `app/config.py` → `SHEETS_INCREMENTAL_*` | `config/sheets_config.py` + `.env` |
+| 6 | `app/config.py` → `GOOGLE_SHEETS_CREDENTIALS_PATH` | `config/sheets_config.py` (`GOOGLE_SERVICE_ACCOUNT_JSON_PATH` + alias) |
+| 7 | `app/config.py` → `FLOWS_PATH`, `NAV_HINT` | `config/bot_config.py` |
+| 8 | `app/config.py` → `GLOBAL_COMMANDS` (frozenset) | `config/intents.py` |
+| 9 | `app/core/parser.py` → `GLOBAL_COMMAND_INTENTS` | `config/intents.py` |
+| 10 | `app/core/parser.py` → `MENU_*` / `ORDER_INTENT_PHRASES` | `config/intents.py` |
+| 11 | `app/utils/validators.py` → `GREETING_PHRASES` | `config/intents.py` |
+| 12 | `flows/restaurant_flow.json` → textos de nodos | `config/prompts.py` (`DEFAULT_PROMPTS`) |
+| 13 | `app/app.py` / gateway → mensajes error/vacío | `config/prompts.py` + `gateway.py` → `get_prompt()` |
+| 14 | `app/app.py` → `_use_rest_webhook_replies()` | `config/settings.py` → `use_rest_webhook_replies()` |
+| 15 | `app/config.py` (monolito) | `chatbot/app/config.py` (shim → `config/*`) |
+
+`config/intents.py` y `config/prompts.py` son **defaults globales**; la edición del dueño irá a BD vía Flutter (Fases 5–9).
+
+---
+
+¿Procedo con la **Fase 4** (FastAPI + webhook Twilio → gateway)? Responde **Sí** para continuar.
+
+
+
+#################################################
+## v0.5 Prompt 5 — Fase 4: API + webhook + persistencia mensajes
+
+
+## Fase 4 completada
+
+API FastAPI con webhook Twilio, persistencia de mensajes en BD y cliente Twilio. **Sin UI web ni Flutter.** El bot en la raíz no se modificó.
+
+### Componentes
+
+| Archivo | Rol |
+|---------|-----|
+| `api/main.py` | FastAPI, CORS, `/health`, `lifespan` → `init_db()` |
+| `api/routes/whatsapp.py` | `POST /webhook` y `POST /bot` → guardar → gateway → guardar respuesta → TwiML/REST |
+| `infrastructure/twilio_client.py` | TwiML + envío REST (reutiliza `AdminService`) |
+| `infrastructure/database.py` | SQLAlchemy, sesiones, `create_all` |
+| `models/conversation.py` | Hilo por `business_id` + `customer_wa_id` |
+| `models/message.py` | `incoming` / `outgoing` |
+| `services/conversation_service.py` | `save_incoming_message`, `save_outgoing_message` |
+
+### Diagrama: Twilio → whatsapp.py → gateway + BD
+
+```mermaid
+sequenceDiagram
+    participant T as Twilio
+    participant W as api/routes/whatsapp.py
+    participant CS as conversation_service
+    participant DB as PostgreSQL/SQLite
+    participant G as chatbot/gateway.py
+    participant TC as twilio_client
+
+    T->>W: POST /webhook
+    W->>CS: save_incoming_message()
+    CS->>DB: conversation + message (incoming)
+    W->>G: handle_incoming_message()
+    G-->>W: response_text
+    W->>CS: save_outgoing_message()
+    CS->>DB: message (outgoing)
+    W->>TC: deliver_reply()
+    TC-->>T: TwiML XML
+```
+
+### Validación
+
+**`validate_chatbot.py`** (obligatorio):
+
+```
+=== Resultado: 0 fallo(s) ===
+```
+
+**`validate_api.py`** (adicional):
+
+```
+  OK  create_app + init_db
+  OK  GET /health
+  OK  POST /webhook -> TwiML
+  OK  incoming message in DB (count=1)
+=== Resultado: 0 fallo(s) ===
+```
+
+### Arranque
+
+```bash
+cd final_system
+pip install -r requirements.txt
+python scripts/migrate_db.py
+python -m api.main
+```
+
+Twilio: `https://tu-dominio/webhook` (o `/bot`).  
+Si no hay PostgreSQL: `DATABASE_URL=sqlite:///data/whatsbot.db` en `.env`.
+
+---
+
+¿Procedo con la **Fase 5** (multi-negocio + modelos CRUD)? Responde **Sí** para continuar.
+
+
+
+
+##################################################
+## v0.6 Prompt 6 — Fase 5: Multi-negocio
+
+## Fase 5 completada
+
+Multi-negocio en BD con negocio **default** = legacy (Twilio, admin, intents y prompts desde `config/*`).
+
+### Implementado
+
+| Área | Detalle |
+|------|---------|
+| **Models** | `business`, `business_intents`, `business_prompts`, `menu_items`, `orders`, `customers` (+ `conversation`/`message` ya existían) |
+| **DB** | `init_db()` registra 8 tablas; `scripts/migrate_db.py` (SQLite por defecto, `--postgres` para `.env`) |
+| **Services** | `business_service`, `menu_service`, `order_service` |
+| **API** | `/businesses`, `/businesses/{id}/menu`, `/businesses/{id}/orders` |
+| **Webhook** | Campo Twilio `To` → `business_id` vía `twilio_whatsapp_from` |
+| **Semilla** | Negocio `default` desde `.env` + intents/prompts legacy en BD |
+
+### `migrate_db` (ejemplo)
+
+```
+  OK  default business: default (La Casa del Sabor)
+  OK  twilio_whatsapp_from: whatsapp:+573242497352
+  OK  menu items seeded: 2
+  OK  business_intents keys: 7
+  OK  business_prompts keys: 21
+```
+
+### `validate_chatbot.py`
+
+```
+=== Resultado: 0 fallo(s) ===
+```
+
+### Flujo webhook (Fase 5)
+
+```mermaid
+sequenceDiagram
+    participant T as Twilio
+    participant W as whatsapp.py
+    participant B as business_service
+    participant CS as conversation_service
+    participant DB as BD
+    participant G as gateway
+
+    T->>W: POST /webhook (To=bot, From=cliente)
+    W->>B: resolve_business_id_for_webhook(To)
+    B->>DB: lookup twilio_whatsapp_from
+    W->>CS: save_incoming (business_id)
+    W->>G: handle_incoming_message
+    W->>CS: save_outgoing
+    W-->>T: TwiML
+```
+
+El chatbot en raíz no se modificó; la lógica de respuesta sigue en el gateway.
+
+---
+
+¿Procedo con la **Fase 6** (pedidos + admin legacy + `notification_service`)? Responde **Sí** para continuar.
+
+
+
+
+
+
+#################################################
+## v0.7 Prompt 7 — Fase 6: Pedidos + ADMIN WhatsApp (crítico)
+
+
+
+## Fase 6 completada
+
+Se cerró la fase de pedidos + confirmación admin preservando el flujo legacy:
+
+**Cliente pide → bot → `ADMIN_WHATSAPP_NUMBER` → dueño confirma → bot responde al cliente**
+
+### Cambios principales
+
+1. **`services/notification_service.py`** — Fachada sobre `AdminService`:
+   - `notify_admin_new_order`, `handle_admin_confirmation`, `is_admin_sender`
+   - `on_order_pending` (notify + espejo BD)
+   - `confirm_order_updates_database` tras `CONFIRMAR ORD-XXX`
+
+2. **`chatbot/gateway.py`** — Corregido bug: la detección de admin estaba anidada solo cuando había `from_number` distinto; ahora coincide con `app.py` (admin se detecta solo con `phone`).
+
+3. **`chatbot/runtime.py`** — Añade `final_system/` al `sys.path` para imports de `services.*`.
+
+4. **`flow_engine.py`** — Ya usa `on_order_pending()` en lugar de `notify_new_order` directo.
+
+### Tests (`test_order_confirmation_flow.py`)
+
+```
+tests/test_order_confirmation_flow.py::test_notify_admin_on_pending_order PASSED
+tests/test_order_confirmation_flow.py::test_admin_confirm_notifies_customer PASSED
+tests/test_order_confirmation_flow.py::test_full_flow_via_gateway PASSED
+
+======================== 3 passed, 5 warnings in 3.52s ========================
+```
+
+### `validate_chatbot.py`
+
+```
+=== Resultado: 0 fallo(s) ===
+```
+
+No se creó Flutter ni se eliminó la confirmación por WhatsApp personal del dueño.
+
+---
+
+**¿Procedo con la Fase 7?** (API WhatsBot / `whatsbot.py`, JWT, chats — sin Flutter aún, según el prompt)
+
+
+
+
+
+
+
+
+
+
+
+
+#################################################
+## v0.8
+
+
+
+**Fase 7 completada.** Backend JSON para la app móvil WhatsBot (sin UI web).
+
+## Entregado
+
+### API REST (`/auth` + `/whatsbot`)
+- **`POST /auth/login`** — JWT con `business_id` (PIN: `WHATSBOT_OWNER_PIN` en `.env`)
+- Chats: `GET /whatsbot/conversations`, `GET .../messages`
+- **`POST /whatsbot/messages`** — dueño envía al cliente vía Twilio
+- Pedidos: `GET /whatsbot/orders/pending`, `POST .../approve`, `POST .../reject`
+- Negocio: `GET /whatsbot/business/me`
+- Edición por app: **`GET/PUT`** `business/menu`, `business/intents`, `business/prompts`
+
+### Gateway + BD
+- `chatbot/business_context.py` — carga menú, intents y prompts por `business_id`
+- `chatbot/gateway.py` — usa BD con fallback a `config/*`
+- `MenuService` — prioriza menú de BD cuando hay contexto de negocio
+
+### Otros
+- CORS ya activo en `api/main.py` (`CORS_ORIGINS`)
+- Tests: **6/6 OK** en `tests/test_whatsbot_api.py`
+- `validate_chatbot.py` → **0 fallos**
+- Docs: `docs/FLUTTER_APP.md`, `docs/GUIA_EDICION_APP.md`, nota en `docs/INCREMENTAL_GUIDE.md`
+
+### Config nueva
+Añade a `final_system/.env`:
+```env
+WHATSBOT_OWNER_PIN=tu_pin_seguro
+JWT_SECRET_KEY=...   # obligatorio para login
+```
+
+Arranque: `cd final_system && python -m api.main`
+
+---
+
+**¿Procedo con la Fase 8?** (Google Sheets opcional — `sheets_sync_service`)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#################################################
+## v0.9 Prompt 9 — Fase 8: Google Sheets opcional
+
+
+**Fase 8 completada.** Google Sheets queda como espejo opcional; con `GOOGLE_SHEETS_ENABLED=false` (default) el sistema sigue funcionando con PostgreSQL + chatbot.
+
+### Entregado
+
+1. **`services/sheets_sync_service.py`**
+   - Espejo BD → Sheets (menú y pedidos)
+   - No-op seguro si `GOOGLE_SHEETS_ENABLED=false` o `business.sheets_enabled=false`
+   - Hooks no bloqueantes tras PUT menú y pedido en BD
+
+2. **`api/routes/sheets.py`** (JWT, mismo auth que WhatsBot)
+   - `GET /sheets/status` — estado global + negocio + conexión
+   - `PUT /sheets/settings` — toggle por negocio
+   - `POST /sheets/sync`, `/sync/menu`, `/sync/orders`
+
+3. **Legacy extendido** — `GoogleSheetsClient.replace_menu_mirror()` y `upsert_order_mirror()` para escribir desde PostgreSQL
+
+4. **Integración**
+   - Router registrado en `api/main.py` (v0.8.0)
+   - Hook en `PUT /whatsbot/business/menu`
+   - Hook en `notification_service.mirror_order_to_database`
+
+5. **Tests y docs**
+   - `tests/test_sheets_api.py` — 6 tests OK
+   - `docs/INCREMENTAL_GUIDE.md` actualizado
+
+### Validación
+
+```
+validate_chatbot.py → 0 fallos
+15 tests (sheets + whatsbot + pedidos) → OK
+```
+
+### Comportamiento
+
+| Estado | Resultado |
+|--------|-----------|
+| `GOOGLE_SHEETS_ENABLED=false` | Sync skipped, API responde `ok: true, skipped: true` |
+| Global ON + negocio OFF | Sin sync |
+| Ambos ON + credenciales | Push menú/pedidos a Sheets |
+
+---
+
+¿Procedo con la **Fase 9** (app Flutter WhatsBot con UI tipo WhatsApp)?
+
+
+
+
+
+
+
+
+
+
+#################################################
+## v0.10 Prompt 10 — Fase 9: App Flutter WhatsBot (UI WhatsApp)
+
+
+
+
+
+
+
+
+
+
+
+
+
