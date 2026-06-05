@@ -28,6 +28,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Union
 
+from config.prompts import get_prompt
+from config.settings import use_rest_webhook_replies
+
 from chatbot.runtime import get_bot_context
 from app.utils.client_message_log import schedule_client_message_log
 
@@ -38,7 +41,7 @@ Reply = Union[str, List[str]]
 
 def _normalize_reply(reply: Reply) -> Reply:
     if not reply or (isinstance(reply, str) and not reply.strip()):
-        return "Estoy aquí para ayudarte. Escribe *menu*, *pedido* o *reservar*."
+        return get_prompt("empty_body_hint")
     return reply
 
 
@@ -94,14 +97,14 @@ def handle_incoming_message(payload: dict) -> dict:
 
     if not wa_id:
         return {
-            "response_text": "No pude identificar tu número. Intenta escribirnos de nuevo.",
+            "response_text": get_prompt("missing_wa_id"),
             "is_admin": False,
             "blocked": False,
             "wa_id": "",
             "business_id": business_id,
             "channel": channel,
             "timestamp": timestamp,
-            "deliver_via_rest": _use_rest_webhook_replies(),
+            "deliver_via_rest": use_rest_webhook_replies(),
             "media": None,
             "actions": [],
         }
@@ -130,11 +133,7 @@ def handle_incoming_message(payload: dict) -> dict:
             reply = flow_engine.process_message(wa_id=wa_id, body=body)
     except Exception:
         logger.exception("Gateway error processing message for wa_id=%s", wa_id)
-        reply = (
-            "Disculpa, tuve un inconveniente momentáneo. "
-            "Por favor intenta de nuevo en unos segundos.\n\n"
-            "Escribe *inicio* para reiniciar."
-        )
+        reply = get_prompt("error_generic")
 
     reply = _normalize_reply(reply)
 
@@ -153,20 +152,7 @@ def handle_incoming_message(payload: dict) -> dict:
         "business_id": business_id,
         "channel": channel,
         "timestamp": timestamp,
-        "deliver_via_rest": _use_rest_webhook_replies(),
+        "deliver_via_rest": use_rest_webhook_replies(),
         "media": None,
         "actions": [],
     }
-
-
-def _use_rest_webhook_replies() -> bool:
-    import os
-
-    from app.config import is_twilio_whatsapp_sandbox
-
-    explicit = os.getenv("TWILIO_REST_WEBHOOK_REPLIES", "").strip().lower()
-    if explicit in {"0", "false", "no", "off"}:
-        return False
-    if explicit in {"1", "true", "yes", "on"}:
-        return True
-    return not is_twilio_whatsapp_sandbox()

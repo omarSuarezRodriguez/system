@@ -3,6 +3,9 @@ import unicodedata
 from datetime import date, datetime, time
 from typing import Optional, Tuple
 
+import app.config  # noqa: F401 — final_system en sys.path
+from config.intents import GREETING_PHRASES
+
 
 def _strip_accents(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value)
@@ -22,28 +25,6 @@ def is_global_command(text: str) -> bool:
         "inicio",
         "cancelar",
     }
-
-
-GREETING_PHRASES = frozenset(
-    {
-        "hola",
-        "holaa",
-        "holaaa",
-        "buenas",
-        "buenos dias",
-        "buenas tardes",
-        "buenas noches",
-        "buen dia",
-        "hey",
-        "hello",
-        "hi",
-        "que tal",
-        "qué tal",
-        "saludos",
-        "como estas",
-        "cómo estás",
-    }
-)
 
 
 def is_greeting(text: str) -> bool:

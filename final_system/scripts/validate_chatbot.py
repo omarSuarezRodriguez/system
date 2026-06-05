@@ -19,7 +19,7 @@ def _fail(label: str, detail: str = "") -> None:
 
 
 def main() -> int:
-    print("=== validate_chatbot (Fase 2) ===\n")
+    print("=== validate_chatbot (Fase 2+) ===\n")
     failures = 0
 
     try:

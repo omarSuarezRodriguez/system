@@ -11,7 +11,15 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import app.config  # noqa: F401
+
 from app.config import GLOBAL_COMMANDS
+from config.intents import (
+    GLOBAL_COMMAND_INTENTS,
+    MENU_INTENT_PHRASES,
+    MENU_INTENT_TOKENS,
+    ORDER_INTENT_PHRASES,
+)
 from app.utils.validators import is_confirmation
 
 logger = logging.getLogger(__name__)
@@ -275,170 +283,6 @@ SYNONYM_TOKEN_MAP: Dict[str, str] = {
     "frits": "papas fritas",
     "pizza": "pizza",
     "ensalada": "ensalada",
-}
-
-MENU_INTENT_TOKENS = frozenset({"menu", "carta", "catalogo", "catálogo", "lista", "ver"})
-
-ORDER_INTENT_PHRASES = (
-    "quiero comer",
-    "tengo hambre",
-    "tengo mucha hambre",
-    "tengo mucho hambre",
-    "algo de comer",
-    "hacer pedido",
-    "hacer un pedido",
-    "me gustaria pedir",
-    "me gustaría pedir",
-    "quisiera pedir",
-    "quisiera ordenar",
-    "voy a pedir",
-    "deseo pedir",
-)
-
-MENU_INTENT_PHRASES = (
-    "ver la carta",
-    "ver el menu",
-    "ver menú",
-    "ver catalogo",
-    "ver catálogo",
-    "mostrar menu",
-    "mostrar menú",
-    "mostrar carta",
-    "que tienen",
-    "qué tienen",
-    "que hay",
-    "qué hay",
-    "que venden",
-    "qué venden",
-    "pasame el menu",
-    "pásame el menú",
-    "lista de precios",
-    "precios del menu",
-)
-
-# Global flow commands — only the five documented commands (+ explicit NL phrases).
-GLOBAL_COMMAND_INTENTS: Dict[str, Dict[str, Any]] = {
-    "menu": {
-        "phrases": MENU_INTENT_PHRASES
-        + (
-            "quiero ver el menu",
-            "quiero la carta",
-            "muestrame el menu",
-            "muéstrame el menú",
-            "que me recomiendan",
-            "qué me recomiendan",
-            "opciones del menu",
-            "opciones de comida",
-        ),
-        "tokens": frozenset({"menu", "menú", "carta", "catalogo", "catálogo"}),
-    },
-    "pedido": {
-        "phrases": ORDER_INTENT_PHRASES
-        + (
-            "hacer pedido",
-            "hacer un pedido",
-            "realizar pedido",
-            "mandar pedido",
-            "enviar pedido",
-            "ordenar comida",
-            "ordenar algo",
-            "quiero ordenar",
-            "voy a ordenar",
-            "deseo ordenar",
-            "me gustaria ordenar",
-            "me gustaría ordenar",
-            "puedo pedir",
-            "para pedir",
-            "pasar pedido",
-            "tomar pedido",
-            "poner pedido",
-            "necesito pedir",
-            "me animo a pedir",
-            "me animo a ordenar",
-        ),
-        "tokens": frozenset({"pedido", "pedidos"}),
-    },
-    "reservar": {
-        "phrases": (
-            "quiero reservar",
-            "quisiera reservar",
-            "hacer reserva",
-            "hacer una reserva",
-            "reservar mesa",
-            "reservar una mesa",
-            "agendar mesa",
-            "agendar una mesa",
-            "apartar mesa",
-            "mesa para",
-            "necesito reservar",
-            "me gustaria reservar",
-            "me gustaría reservar",
-            "quiero una mesa",
-            "necesito una mesa",
-            "apartar una mesa",
-            "cita para comer",
-            "reservacion de mesa",
-            "reservación de mesa",
-            "apartar lugar",
-            "guardar mesa",
-        ),
-        "tokens": frozenset(
-            {
-                "reservar",
-                "reserva",
-                "reservacion",
-                "reservación",
-                "agendar",
-                "apartar",
-                "cita",
-            }
-        ),
-    },
-    "inicio": {
-        "phrases": (
-            "volver al inicio",
-            "ir al inicio",
-            "empezar de nuevo",
-            "desde cero",
-            "reiniciar chat",
-            "menu principal",
-            "menú principal",
-            "volver al menu principal",
-            "volver al menu",
-            "volver al menú",
-            "regresar al inicio",
-            "comenzar de nuevo",
-            "otra vez desde el inicio",
-            "reiniciar conversacion",
-            "reiniciar conversación",
-        ),
-        "tokens": frozenset({"inicio", "reiniciar", "restart"}),
-    },
-    "cancelar": {
-        "phrases": (
-            "cancelar pedido",
-            "cancelar mi pedido",
-            "anular pedido",
-            "anular mi pedido",
-            "abortar pedido",
-            "no quiero el pedido",
-            "olvidar pedido",
-            "borrar pedido",
-            "cancelar todo",
-            "cancelar la orden",
-            "no quiero continuar",
-            "dejalo asi",
-            "déjalo así",
-            "ya no quiero pedir",
-            "ya no sigo con el pedido",
-            "ya no sigo con este pedido",
-            "mejor ya no sigo con este pedido",
-            "suspender pedido",
-        ),
-        "tokens": frozenset(
-            {"cancelar", "anular", "abortar", "olvidar", "borrar", "suspender"}
-        ),
-    },
 }
 
 INTENT_MIN_CONFIDENCE = 0.82

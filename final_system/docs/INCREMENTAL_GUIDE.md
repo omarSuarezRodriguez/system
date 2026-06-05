@@ -49,12 +49,25 @@
 
 ---
 
-## Fase 3 — Config (pendiente)
+## Fase 3 — Config ✅
 
-- [ ] Centralizar hardcoded legacy → `config/*`
+- [x] Secrets y URLs solo en `final_system/.env` (sin sobrescribir valores Fase 1)
+- [x] `config/settings.py` — Twilio, admin, JWT, paths, API
+- [x] `config/sheets_config.py` — Sheets TTL, credenciales (alias legacy)
+- [x] `config/bot_config.py` — FLOWS_PATH, NAV_HINT, branding
+- [x] `config/intents.py` — GLOBAL_COMMAND_INTENTS + GREETING_PHRASES (parser legacy)
+- [x] `config/prompts.py` — 21 textos desde `flows/restaurant_flow.json` + gateway
+- [x] `chatbot/app/config.py` — shim hacia `config/*`
+- [x] `validate_chatbot.py` → 0 fallos
 
 ---
 
-## Fases 4–10
+## Fase 4 — API webhook (pendiente)
+
+- [ ] FastAPI + `whatsapp.py` → gateway
+
+---
+
+## Fases 5–10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.

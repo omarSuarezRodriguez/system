@@ -1,75 +1,81 @@
-import os
+"""
+Shim hacia config centralizada (Fase 3).
+
+El chatbot importa `app.config` sin cambios; los valores viven en final_system/config/.
+"""
+
+from __future__ import annotations
+
+import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
+_FS_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_FS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_FS_ROOT))
 
-# final_system/ (parent of chatbot/app/)
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-REPO_ROOT = BASE_DIR.parent
-load_dotenv(BASE_DIR / ".env")
+from config import bot_config, settings, sheets_config  # noqa: E402
+from config.intents import GLOBAL_COMMANDS  # noqa: E402
 
-DATA_DIR = BASE_DIR / "data"
+BASE_DIR = settings.BASE_DIR
+REPO_ROOT = settings.REPO_ROOT
+DATA_DIR = settings.DATA_DIR
 
-RESTAURANT_NAME = os.getenv(
+RESTAURANT_NAME = settings.RESTAURANT_NAME
+FLOWS_PATH = bot_config.FLOWS_PATH
+NAV_HINT = bot_config.NAV_HINT
+
+GOOGLE_SHEETS_CREDENTIALS_PATH = sheets_config.GOOGLE_SHEETS_CREDENTIALS_PATH
+GOOGLE_SPREADSHEET_ID = sheets_config.GOOGLE_SPREADSHEET_ID
+
+STATE_PERSIST_PATH = settings.STATE_PERSIST_PATH
+PARSER_ERROR_LOG_PATH = settings.PARSER_ERROR_LOG_PATH
+
+ADMIN_WHATSAPP_NUMBER = settings.ADMIN_WHATSAPP_NUMBER
+TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
+TWILIO_WHATSAPP_FROM = settings.TWILIO_WHATSAPP_FROM
+TWILIO_WHATSAPP_SANDBOX_NUMBER = settings.TWILIO_WHATSAPP_SANDBOX_NUMBER
+
+ADMIN_REMINDER_INTERVAL_SECONDS = settings.ADMIN_REMINDER_INTERVAL_SECONDS
+ADMIN_REMINDER_MAX_SECONDS = settings.ADMIN_REMINDER_MAX_SECONDS
+
+MENU_CACHE_TTL_SECONDS = sheets_config.MENU_CACHE_TTL_SECONDS
+ORDERS_CACHE_TTL_SECONDS = sheets_config.ORDERS_CACHE_TTL_SECONDS
+BLOCKED_USERS_CACHE_TTL_SECONDS = sheets_config.BLOCKED_USERS_CACHE_TTL_SECONDS
+SHEETS_INCREMENTAL_THRESHOLD = sheets_config.SHEETS_INCREMENTAL_THRESHOLD
+SHEETS_FULL_REFRESH_INTERVAL_SECONDS = (
+    sheets_config.SHEETS_FULL_REFRESH_INTERVAL_SECONDS
+)
+SHEETS_INCREMENTAL_BATCH_SIZE = sheets_config.SHEETS_INCREMENTAL_BATCH_SIZE
+
+is_twilio_whatsapp_sandbox = settings.is_twilio_whatsapp_sandbox
+use_rest_webhook_replies = settings.use_rest_webhook_replies
+
+__all__ = [
+    "BASE_DIR",
+    "REPO_ROOT",
+    "DATA_DIR",
     "RESTAURANT_NAME",
-    os.getenv("DEFAULT_BUSINESS_NAME", "La Casa del Sabor"),
-)
-GOOGLE_SHEETS_CREDENTIALS_PATH = os.getenv(
+    "FLOWS_PATH",
+    "NAV_HINT",
+    "GLOBAL_COMMANDS",
     "GOOGLE_SHEETS_CREDENTIALS_PATH",
-    os.getenv(
-        "GOOGLE_SERVICE_ACCOUNT_JSON_PATH",
-        str(BASE_DIR / "credentials" / "google-service-account.json"),
-    ),
-)
-GOOGLE_SPREADSHEET_ID = os.getenv("GOOGLE_SPREADSHEET_ID", "")
-STATE_PERSIST_PATH = os.getenv(
+    "GOOGLE_SPREADSHEET_ID",
     "STATE_PERSIST_PATH",
-    str(DATA_DIR / "user_states.json"),
-)
-_flows_env = os.getenv("FLOWS_PATH", "").strip()
-if _flows_env:
-    FLOWS_PATH = Path(_flows_env)
-    if not _flows_env.startswith(("/", "\\")) and ":" not in _flows_env[:3]:
-        FLOWS_PATH = (BASE_DIR / _flows_env).resolve()
-else:
-    FLOWS_PATH = REPO_ROOT / "flows" / "restaurant_flow.json"
-
-GLOBAL_COMMANDS = frozenset({"menu", "pedido", "reservar", "inicio", "cancelar"})
-
-ADMIN_WHATSAPP_NUMBER = os.getenv("ADMIN_WHATSAPP_NUMBER", "").strip()
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
-TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "").strip()
-
-# Twilio shared sandbox number (not valid for production alerts).
-TWILIO_WHATSAPP_SANDBOX_NUMBER = "+14155238886"
-
-
-def is_twilio_whatsapp_sandbox() -> bool:
-    from_digits = "".join(ch for ch in TWILIO_WHATSAPP_FROM if ch.isdigit())
-    sandbox_digits = TWILIO_WHATSAPP_SANDBOX_NUMBER.lstrip("+")
-    return sandbox_digits in from_digits or from_digits.endswith(sandbox_digits)
-
-PARSER_ERROR_LOG_PATH = os.getenv(
     "PARSER_ERROR_LOG_PATH",
-    str(DATA_DIR / "parser_errors.jsonl"),
-)
-
-ADMIN_REMINDER_INTERVAL_SECONDS = int(os.getenv("ADMIN_REMINDER_INTERVAL_SECONDS", "300"))
-ADMIN_REMINDER_MAX_SECONDS = int(os.getenv("ADMIN_REMINDER_MAX_SECONDS", "3600"))
-
-MENU_CACHE_TTL_SECONDS = int(os.getenv("MENU_CACHE_TTL_SECONDS", "60"))
-ORDERS_CACHE_TTL_SECONDS = int(os.getenv("ORDERS_CACHE_TTL_SECONDS", "30"))
-BLOCKED_USERS_CACHE_TTL_SECONDS = int(os.getenv("BLOCKED_USERS_CACHE_TTL_SECONDS", "15"))
-
-# Incremental Sheets refresh (activates when row count >= threshold)
-SHEETS_INCREMENTAL_THRESHOLD = int(os.getenv("SHEETS_INCREMENTAL_THRESHOLD", "500"))
-SHEETS_FULL_REFRESH_INTERVAL_SECONDS = int(
-    os.getenv("SHEETS_FULL_REFRESH_INTERVAL_SECONDS", "3600")
-)
-SHEETS_INCREMENTAL_BATCH_SIZE = int(os.getenv("SHEETS_INCREMENTAL_BATCH_SIZE", "100"))
-
-NAV_HINT = (
-    "\n\n---\n"
-    "Escribe *inicio* para volver al inicio\n"
-)
+    "ADMIN_WHATSAPP_NUMBER",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_WHATSAPP_FROM",
+    "TWILIO_WHATSAPP_SANDBOX_NUMBER",
+    "ADMIN_REMINDER_INTERVAL_SECONDS",
+    "ADMIN_REMINDER_MAX_SECONDS",
+    "MENU_CACHE_TTL_SECONDS",
+    "ORDERS_CACHE_TTL_SECONDS",
+    "BLOCKED_USERS_CACHE_TTL_SECONDS",
+    "SHEETS_INCREMENTAL_THRESHOLD",
+    "SHEETS_FULL_REFRESH_INTERVAL_SECONDS",
+    "SHEETS_INCREMENTAL_BATCH_SIZE",
+    "is_twilio_whatsapp_sandbox",
+    "use_rest_webhook_replies",
+]

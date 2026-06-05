@@ -1,22 +1,12 @@
-"""Bot session defaults — global fallbacks until business config lives in DB."""
+"""Bot session defaults — flows, navigation, branding."""
 
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
-
-# Flow JSON (legacy path until chatbot is copied in Fase 2)
-FLOWS_PATH = Path(
-    os.getenv(
-        "FLOWS_PATH",
-        str(BASE_DIR.parent / "flows" / "restaurant_flow.json"),
-    )
-)
+from config.prompts import get_prompt
+from config.settings import BASE_DIR, REPO_ROOT, RESTAURANT_NAME
 
 GLOBAL_COMMANDS = frozenset({"menu", "pedido", "reservar", "inicio", "cancelar"})
 
@@ -25,16 +15,28 @@ NAV_HINT = (
     "Escribe *inicio* para volver al inicio\n"
 )
 
-# Navigation / UX flags (mirrors restaurant_flow.json meta)
 NAVIGATION_HINT_ENABLED = True
-CANCEL_MESSAGE_DEFAULT = (
-    "Entendido, cancelé el proceso actual. Estoy aquí cuando quieras continuar."
+CANCEL_MESSAGE_DEFAULT = get_prompt(
+    "cancel_message",
+    "Entendido, cancelé el proceso actual. Estoy aquí cuando quieras continuar.",
 )
+
+
+def resolve_flows_path() -> Path:
+    flows_env = os.getenv("FLOWS_PATH", "").strip()
+    if flows_env:
+        path = Path(flows_env)
+        if not flows_env.startswith(("/", "\\")) and ":" not in flows_env[:3]:
+            return (BASE_DIR / flows_env).resolve()
+        return path.resolve()
+    return REPO_ROOT / "flows" / "restaurant_flow.json"
+
+
+FLOWS_PATH = resolve_flows_path()
 
 # -----------------------------------------------------------------------------
 # GUÍA RÁPIDA
-# - Entrada: FLOWS_PATH apunta al JSON conversacional (hoy en raíz: flows/).
-# - Salida: defaults para nuevos negocios al hacer onboard_business (Fase 5+).
-# - El dueño edita flujo/textos desde Flutter → BD; este archivo NO es su panel.
-# - Fase 2: copiar chatbot; Fase 3: mover hardcoded de app/config.py aquí.
+# - Entrada: FLOWS_PATH en .env o flows/restaurant_flow.json en repo raíz.
+# - Salida: FLOWS_PATH, NAV_HINT, RESTAURANT_NAME para flow_engine.
+# - El dueño edita textos en Flutter; flujo JSON/BD en fases posteriores.
 # -----------------------------------------------------------------------------

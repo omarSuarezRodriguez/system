@@ -8,6 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR.parent
 load_dotenv(BASE_DIR / ".env")
 
 # API / server
@@ -16,6 +17,8 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "5000"))
 DEBUG = os.getenv("DEBUG", "false").strip().lower() in {"1", "true", "yes", "on"}
+FLASK_ENV = os.getenv("FLASK_ENV", "production")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "0")
 
 # Database
 DATABASE_URL = os.getenv(
@@ -29,6 +32,14 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 # JWT (Flutter WhatsBot)
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", ""))
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
+SECRET_KEY = os.getenv("SECRET_KEY", JWT_SECRET_KEY)
+
+# Branding (legacy RESTAURANT_NAME → DEFAULT_BUSINESS_NAME)
+RESTAURANT_NAME = os.getenv(
+    "RESTAURANT_NAME",
+    os.getenv("DEFAULT_BUSINESS_NAME", "La Casa del Sabor"),
+)
+DEFAULT_BUSINESS_NAME = os.getenv("DEFAULT_BUSINESS_NAME", RESTAURANT_NAME)
 
 # Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
@@ -44,9 +55,6 @@ ADMIN_REMINDER_INTERVAL_SECONDS = int(
 )
 ADMIN_REMINDER_MAX_SECONDS = int(os.getenv("ADMIN_REMINDER_MAX_SECONDS", "3600"))
 
-# Default business seed (Fase 5+)
-DEFAULT_BUSINESS_NAME = os.getenv("DEFAULT_BUSINESS_NAME", "Mi Negocio")
-
 # Paths
 DATA_DIR = BASE_DIR / "data"
 STATE_PERSIST_PATH = os.getenv(
@@ -57,6 +65,10 @@ PARSER_ERROR_LOG_PATH = os.getenv(
     "PARSER_ERROR_LOG_PATH",
     str(DATA_DIR / "parser_errors.jsonl"),
 )
+
+# Scripts
+DEPLOY_URL = os.getenv("DEPLOY_URL", API_PUBLIC_URL).rstrip("/")
+DEPLOY_TIMEOUT = int(os.getenv("DEPLOY_TIMEOUT", "60"))
 
 
 def is_twilio_whatsapp_sandbox() -> bool:
@@ -77,8 +89,7 @@ def use_rest_webhook_replies() -> bool:
 # -----------------------------------------------------------------------------
 # GUÍA RÁPIDA
 # - Entrada: variables en final_system/.env (migradas del bot en raíz).
-# - Salida: constantes usadas por api/, services/, infrastructure/.
-# - Editar: solo puertos, CORS, JWT, DATABASE_URL para tu entorno.
-# - No poner secrets en código; WhatsBot Flutter nunca lee este archivo directamente.
-# - Fase 2+: el gateway importará settings desde aquí en lugar de app/config.py.
+# - Salida: constantes usadas por api/, services/, infrastructure/, chatbot shim.
+# - Solo secrets y URLs en .env; no hardcodear tokens aquí.
+# - Fase 3: única fuente para Twilio, admin, JWT, paths y servidor.
 # -----------------------------------------------------------------------------
