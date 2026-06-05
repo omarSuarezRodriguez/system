@@ -891,6 +891,264 @@ Tutorial para el dueño: `docs/GUIA_EDICION_APP.md`.
 ##################################################
 ## v0.11 Prompt 11 — Fase 10: Validación final + guías
 
+## Fase 10 completada
+
+Cierre del SaaS WhatsBot en `final_system/`. Resumen:
+
+### 1. `scripts/validate_system.py`
+Validación E2E: gateway, webhook API, auth WhatsBot, flujo de pedido (notify admin + aprobar desde app) y edición menú/prompts desde BD.
+
+### 2. Validaciones ejecutadas (0 fallos)
+
+| Script | Resultado |
+|--------|-----------|
+| `validate_chatbot.py` | 6/6 OK |
+| `validate_api.py` | 4/4 OK |
+| `validate_system.py` | 14/14 OK |
+| `pytest tests/` | **15 passed** |
+| `flutter analyze` | **No issues found!** |
+
+### 3. Documentación
+
+| Archivo | Contenido |
+|---------|-----------|
+| `final_system/README.md` | Guía rápida 15 líneas, credenciales migradas, secciones A (backend) y B (Flutter), alta de negocio, pruebas, checklist E2E, salidas de validación |
+| `docs/GUIA_NEGOCIOS.md` | Alta paso a paso (`onboard_business.py`, Twilio, login app) |
+| `docs/GUIA_EDICION_APP.md` | Ya estaba completo (menú/intents/mensajes solo desde app) |
+| `docs/INCREMENTAL_GUIDE.md` | Fase 10 cerrada con checklist E2E |
+
+### 4. API corriendo
+
+- **Health:** `GET http://127.0.0.1:5000/health` → `status: ok`
+- Ajustes en `.env` para dev local:
+  - `DATABASE_URL=sqlite:///data/whatsbot.db` (PostgreSQL no estaba disponible)
+  - `WHATSBOT_OWNER_PIN=changeme` (faltaba para login Flutter)
+
+### 5. App Flutter
+
+- Documentada en README sección B y `docs/FLUTTER_APP.md`
+- Login: negocio `default`, PIN `changeme`
+- `api_config.dart` → `http://127.0.0.1:5000`
+
+### Checklist E2E (automático vs manual Twilio)
+
+Automatizado en `validate_system.py` + tests: gateway, webhook, conversaciones, pedido, menú/prompts desde BD.
+
+Manual con WhatsApp real: cliente escribe al bot, dueño responde desde app, confirmación por `ADMIN_WHATSAPP_NUMBER`.
+
+---
+
+**Arrancar todo:**
+
+```bash
+cd final_system
+python scripts/migrate_db.py
+python scripts/onboard_business.py --default
+python -m api.main
+
+# otra terminal
+cd whatsbot_app
+flutter run
+```
+
+¿Quieres que haga commit de estos cambios?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################
+## v0.11b Prompt 11b — Solo si faltan credenciales tras Fase 1
+
+
+Revisé `final_system/.env` contra el bot en raíz, el maestro (`PROMPT_EVOLUCION_SAAS_WHATSBOT.md` §7) y el código en `final_system/config/`, `final_system/api/` y el legacy en `app/`.
+
+## Resultado
+
+**No hay variables obligatorias vacías ni ausentes** en `final_system/.env`. Twilio, Admin, Sheets, cachés, paths y `DATABASE_URL` (sqlite) ya están. No te pido de nuevo esas credenciales.
+
+Lo que sí aplica: **2 variables nuevas del SaaS** que el bot legacy **nunca tuvo** — el `.env` ya tiene defaults de desarrollo, pero para producción o app en teléfono real **tú** debes elegir el valor (no está en el repo legacy).
+
+---
+
+### 1. `API_PUBLIC_URL` (HTTPS en producción)
+
+| | |
+|---|---|
+| **Estado en `final_system/.env`** | Presente como `http://127.0.0.1:5000` (dev local) |
+| **Dónde busqué** | `.env` raíz, `.env.example` raíz, `run.py`, `runall.py`, `scripts/verify_deployment.py`, `scripts/measure_latency.py`, `README.md` (ngrok), `render.yaml`, `final_system/config/settings.py`, `final_system/whatsbot_app/lib/config/api_config.dart` |
+| **Qué necesito de ti** | Solo si vas a **Twilio remoto** o **Flutter en dispositivo físico**: la URL HTTPS pública (`https://….ngrok-free.app` o tu dominio Render/Railway). En el legacy no existía como variable; solo instrucciones ngrok en README. Para dev en emulador, el valor actual basta. |
+
+---
+
+### 2. `WHATSBOT_OWNER_PIN`
+
+| | |
+|---|---|
+| **Estado en `final_system/.env`** | Presente como `changeme` (default) |
+| **Dónde busqué** | `.env` raíz, `app/config.py`, todo `final_system/` — login JWT solo en `final_system/api/routes/auth.py` y `final_system/config/settings.py` |
+| **Qué necesito de ti** | Un **PIN propio** para login en la app Flutter (no existía en el bot original). En dev puedes dejar `changeme`; en producción conviene cambiarlo. |
+
+---
+
+### No hace falta que proporciones
+
+| Variable | Motivo |
+|----------|--------|
+| Twilio (`TWILIO_*`) | Migradas desde `.env` raíz |
+| `ADMIN_WHATSAPP_NUMBER` | Migrada desde `.env` raíz |
+| `DATABASE_URL` | Ya en `final_system/.env` (`sqlite:///data/whatsbot.db`) |
+| `JWT_SECRET_KEY` | Migrada desde `SECRET_KEY` del legacy (`change-me-in-production`) |
+| Google Sheets (archivo) | `GOOGLE_SERVICE_ACCOUNT_JSON_PATH` + `final_system/credentials/google-service-account.json` existen |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` (inline) | Opcional; solo para cloud sin filesystem (`render.yaml`, comentario en `.env.example` raíz). Con el JSON en disco, no hace falta. |
+| `REDIS_URL` | Opcional (`final_system/infrastructure/cache.py`) |
+
+---
+
+**Resumen:** el `.env` de `final_system/` está completo para arrancar en local. Solo necesito que me des **`API_PUBLIC_URL` HTTPS** y un **`WHATSBOT_OWNER_PIN`** real cuando pases a producción o pruebes la app en un teléfono fuera de tu PC.
+
+
+
+
+
+
+
+
+################################################
+## v0.12
+
+Has pegado el **Prompt 12** (corrección cuando una fase falla). En el mensaje no vienen rellenados la fase ni el error, así que no hay un fallo concreto que arreglar todavía.
+
+## Qué hace este prompt
+
+Sirve para **parar**, corregir **solo lo roto** (sin reescribir intents ni meter UI web si el problema es Flutter), ejecutar `validate_chatbot.py` y decidir si **reintentas la misma fase**.
+
+## Salida de `validate_chatbot.py` (ahora)
+
+```
+=== validate_chatbot (Fase 2+) ===
+
+  OK  import chatbot.gateway
+  OK  get_bot_context()
+  OK  hola -> respuesta (256 chars)
+  OK  menu -> incluye contenido de menu
+  OK  business_id passthrough
+  OK  admin -> is_admin + respuesta
+
+=== Resultado: 0 fallo(s) ===
+```
+
+También corrí `validate_api.py` y `validate_system.py`: **0 fallos** en los tres.
+
+## Para poder arreglar algo
+
+Copia y completa el prompt así (o respóndeme con lo mismo):
+
+```
+@PROMPT_EVOLUCION_SAAS_WHATSBOT.md
+
+STOP. Fase [N] falló:
+[pega error exacto / qué dejó de funcionar — ej. login Flutter, webhook Twilio, pedido no confirma]
+
+Arregla SOLO lo necesario. NO reescribir intents.
+NO crear UI web si el fallo es de Flutter — arreglar Flutter.
+
+validate_chatbot.py → pegar salida.
+¿Reintentamos la misma fase?
+```
+
+Indica:
+
+1. **N** (0–10 según el flujo de `PROMPTS_LISTOS.md`)
+2. **Qué falló** (mensaje de error, pantalla, comando)
+3. Si el problema es **Flutter en runtime** (no solo `flutter analyze`)
+
+Con eso aplico el Prompt 12 al pie de la letra y te digo si conviene **reintentar la misma fase** o pasar a la siguiente.
+
+
+
+
+################################################
+## v0.13 Prompt 13 — Mejora incremental (post-proyecto)
+
+Has pegado el **Prompt 13** (mejora incremental post-proyecto). Es la plantilla; falta la parte que define el trabajo:
+
+```
+MEJORA: [una frase]
+```
+
+Sin esa frase no hay nada concreto que implementar.
+
+## Qué hace el Prompt 13
+
+Cuando el sistema en `final_system/` ya funciona, sirve para **un cambio pequeño**:
+
+- Cambio mínimo (no rehacer fases)
+- UI → solo en `whatsbot_app/` (Flutter)
+- Actualizar `docs/INCREMENTAL_GUIDE.md`
+- Al final: `validate_chatbot.py`
+
+## Qué tienes que hacer tú
+
+Escribe **una mejora en una frase**, por ejemplo:
+
+- «En login, recordar el último negocio»
+- «En lista de chats, mostrar hora del último mensaje»
+- «Botón para refrescar conversaciones sin esperar el polling»
+
+Pégala así:
+
+```
+@PROMPT_EVOLUCION_SAAS_WHATSBOT.md
+
+Sistema en final_system/ funcionando.
+
+MEJORA: [tu frase aquí]
+
+REGLAS:
+- Cambio mínimo
+- Si es UI → solo Flutter (whatsbot_app/)
+- Actualizar docs/INCREMENTAL_GUIDE.md
+- validate_chatbot.py al final
+```
+
+Cuando envíes eso con la mejora rellenada, aplico el Prompt 13. Hasta entonces no hace falta que hagas nada más.
+
+
+
+
+
+
+#################################################
+## Prompt 14 — Alta de negocio en producción
+
+
+@PROMPT_EVOLUCION_SAAS_WHATSBOT.md
+
+Alta de NEGOCIO en producción (sin tocar chatbot):
+
+Nombre: [ ]
+TWILIO_WHATSAPP_FROM: [ ]
+ADMIN_WHATSAPP_NUMBER: [ ]
+
+Comandos copy-paste + cómo vincular dueño en app Flutter + pruebas.
+
+
+
+Sirve para cuando quiera un negocio nuevo en producción
+
+
+
+
 
 
 

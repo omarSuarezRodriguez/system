@@ -1,12 +1,13 @@
 /// URL pública del backend — migrada de `API_PUBLIC_URL` en `final_system/.env`.
 ///
-/// Valor actual en .env: `http://127.0.0.1:5000`
-/// En emulador Android usa `http://10.0.2.2:5000` si el backend corre en tu PC.
-/// En producción/ngrok: la URL pública HTTPS de tu API.
+/// Valor actual en .env: `https://snowman-shower-pellet.ngrok-free.dev`
+/// Emulador en la misma PC: puedes usar `http://127.0.0.1:5000` o esta URL ngrok.
+/// Teléfono físico: usa la URL ngrok HTTPS (misma que Twilio webhook).
 class ApiConfig {
   ApiConfig._();
 
-  static const String apiBaseUrl = 'http://127.0.0.1:5000';
+  static const String apiBaseUrl =
+      'https://snowman-shower-pellet.ngrok-free.dev';
 
   static const Duration chatPollInterval = Duration(seconds: 4);
   static const Duration chatsRefreshInterval = Duration(seconds: 8);
