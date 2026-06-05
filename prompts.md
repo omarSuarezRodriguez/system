@@ -1147,6 +1147,272 @@ Comandos copy-paste + cómo vincular dueño en app Flutter + pruebas.
 Sirve para cuando quiera un negocio nuevo en producción
 
 
+################################################
+## v0.15 
+
+
+## prompt ##
+
+https://snowman-shower-pellet.ngrok-free.dev/bot 
+
+aparte de eso necesitas algo más? tú tienes el resto de credenciales aqui, inicia todo correctamente quiero verlo funcionar bien
+
+
+
+## res cursor ##
+
+El primer arranque de la API (`python -m api.main` con recarga automática) **se detuvo** (código de salida 1) cuando liberamos el puerto 5000 — había procesos duplicados en conflicto.
+
+**No hace falta que hagas nada:** la API **sigue activa** en `http://127.0.0.1:5000` con tu URL ngrok y responde bien en `/health`. Puedes seguir probando WhatsApp y la app Flutter con normalidad.
+
+Si en algún momento deja de responder, arranca de nuevo con:
+
+```powershell
+cd c:\Users\Usuario\Desktop\System\final_system
+python -c "import uvicorn; uvicorn.run('api.main:app', host='0.0.0.0', port=5000, reload=False)"
+```
+
+
+
+
+################################################
+## v0.16 
+
+
+## Prompt ##
+
+
+Listo ya que tienes todo, ahora corre el sistema, osea arrancalo, quiero verlo funcionar, para la app, la vas a correr en "240404RN64Y (wireless)(android-arm64), es decir el dispositivo que está conectado a cursor via wifi, ya has todo lo necesario no me pidas confirmación de nada solamente quiero ya verla funcional corriendo, has todo lo necesario
+
+
+
+## Resp cursor ##
+
+
+La app **WhatsBot** se compiló, instaló y arrancó correctamente en tu **24040RN64Y (wireless)**. La sesión de `flutter run` terminó bien (código 0), pero al final apareció **“Lost connection to device”** — suele pasar con depuración WiFi; la app **sigue instalada** en el teléfono: ábrela desde el launcher.
+
+Si no la ves o no conecta al backend, vuelve a desplegar con:
+
+```powershell
+cd c:\Users\Usuario\Desktop\System\final_system\whatsbot_app
+flutter run -d 24040RN64Y
+```
+
+Login: negocio `default`, PIN `changeme`. La API y ngrok deben seguir activos en la PC.
+
+
+
+
+
+### Actualmente la app está totalmente funcional
+
+
+
+
+
+################################################
+## v0.17
+
+## prompt ##
+
+@PROMPT_EVOLUCION_SAAS_WHATSBOT.md
+
+Sistema en final_system/ funcionando.
+
+MEJORA: [Quiero por favor que como mejora incremental, se agregue la funcionalidad como whatsapp de que cuando llega mensaje, suene, y tenga notifiacaciones y todo identico a whatsapp, osea quiero que el funcoinamiento quede identico a whatsapp en cuanto a notificaciones, forma de llegar mensaje, sonidos, etc]
+
+REGLAS:
+- Cambio mínimo
+- Si es UI → solo Flutter (whatsbot_app/)
+- Si es un cambio solo de la app flutter -> solo flutter (whatsbot_app/)
+- Actualizar docs/INCREMENTAL_GUIDE.md
+- validate_chatbot.py al final
+
+
+
+
+## Resp cursor ##
+
+Implementé alertas de mensajes al estilo WhatsApp, solo en Flutter (`whatsbot_app/`).
+
+## Qué hace ahora
+
+1. **Sonido** al llegar un mensaje entrante (cliente → bot), en primer y segundo plano.
+2. **Vibración** breve (como WhatsApp en Android).
+3. **Notificación del sistema** con nombre del contacto y preview del mensaje cuando:
+   - la app está en segundo plano, o
+   - estás en la lista de chats u otro chat.
+4. **Sin banner** si ya estás viendo ese chat (solo suena, como WhatsApp).
+5. **Lista de chats**: preview en negrita, hora en verde y punto de no leído.
+6. **Tap en la notificación** abre el chat correspondiente.
+
+## Archivos principales
+
+- `lib/services/message_alerts_service.dart` — lógica central de sonido/notificaciones
+- `lib/widgets/app_lifecycle_observer.dart` — detecta primer/segundo plano
+- `assets/sounds/incoming_message.wav` + copia en Android `res/raw/`
+- Integración en `main.dart`, `chat_screen.dart`, `chats_list_screen.dart`, `login_screen.dart`
+- `docs/INCREMENTAL_GUIDE.md` actualizado
+
+## Dependencias nuevas
+
+- `flutter_local_notifications`
+- `audioplayers`
+
+## Validación
+
+- `flutter analyze` → sin issues
+- `validate_chatbot.py` → 0 fallos
+
+## Cómo probar
+
+1. `cd final_system/whatsbot_app && flutter run`
+2. Inicia sesión y deja la app en la lista de chats.
+3. Envía un WhatsApp al bot → debe sonar y mostrar notificación.
+4. Abre ese chat → el siguiente mensaje suena sin banner.
+5. Minimiza la app → la notificación aparece en la bandeja del sistema.
+
+En Android 13+ la app pedirá permiso de notificaciones al iniciar. Si no suena en el emulador, revisa que el volumen de notificaciones esté activo.
+
+
+
+
+################################################
+## v0.18
+
+## Primer prompt ##
+
+tuve un error al ejecutar la app, revisa y hazla correr correctamente
+
+
+## Resp cursor ##
+
+El fallo venía del build de Android, no del código Dart.
+
+## Causa
+
+`flutter_local_notifications` exige **core library desugaring** en el módulo `:app`. Sin eso, Gradle falla en `checkDebugAarMetadata` y `flutter run` termina con exit code 1.
+
+## Cambio aplicado
+
+En `android/app/build.gradle.kts` se habilitó desugaring y se añadió la dependencia:
+
+```13:17:c:\Users\Usuario\Desktop\System\final_system\whatsbot_app\android\app\build.gradle.kts
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
+    }
+```
+
+```47:49:c:\Users\Usuario\Desktop\System\final_system\whatsbot_app\android\app\build.gradle.kts
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+## Verificación
+
+El build de prueba terminó bien:
+
+```text
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+```
+
+Para ejecutar de nuevo en tu teléfono:
+
+```powershell
+cd c:\Users\Usuario\Desktop\System\final_system\whatsbot_app
+flutter run
+```
+
+**Nota:** Los mensajes `gralloc4` / `OpenGLRenderer` en el log suelen ser del dispositivo/emulador, no del proyecto. Si ves otra vez “Lost connection to device”, prueba cable USB estable, `flutter devices` y reiniciar el teléfono; el APK ya compila correctamente.
+
+¿Quieres que también revise que el backend Flask esté levantado para que la app no falle al conectar con la API?
+
+
+
+
+## Segundo Prompt ##
+
+nohagas nada, si borro actualmente todo lo que hay por fuera de final/system, no afecta nada a final/system?
+
+
+
+## res cursor ##
+
+
+**En gran parte sí puedes borrar lo de fuera sin tocar el código de `final_system`**, pero **no es 100% independiente en tiempo de ejecución**. Hay unas pocas rutas que aún apuntan al directorio padre (`System`).
+
+## Lo que sí es autónomo
+
+`final_system` concentra lo que necesitas para operar:
+
+- API FastAPI, chatbot, servicios, tests  
+- `.env`, `credentials/`, `data/` (BD, cachés, estados)  
+- App Flutter en `whatsbot_app/`  
+
+No depende del bot viejo de la raíz (`app/`, `run.py`, `requirements.txt` de arriba, etc.) para arrancar. Los README y `prompts.md` de fuera son solo documentación.
+
+## Lo que **sí** se vería afectado si borras la raíz
+
+### 1. Flujo del chatbot (importante)
+
+El JSON del flujo **solo está** en:
+
+`System/flows/restaurant_flow.json`
+
+Dentro de `final_system` **no** existe `flows/restaurant_flow.json`, aunque tu `.env` dice:
+
+`FLOWS_PATH=flows/restaurant_flow.json`
+
+Eso se resuelve como `final_system/flows/...`, y ese archivo no está ahí. El motor del bot **abre ese JSON al iniciar**; sin él, la API/chatbot falla al arrancar.
+
+**Antes de borrar la raíz:** copia `flows/restaurant_flow.json` a `final_system/flows/` (o corrige `FLOWS_PATH` y deja el archivo dentro de `final_system`).
+
+### 2. Logs de mensajes de clientes
+
+El código escribe en la carpeta **padre**, no dentro de `final_system`:
+
+```23:24:final_system/chatbot/app/utils/client_message_log.py
+LOG_DIR = REPO_ROOT / "client_messages_log"
+GLOBAL_LOG_PATH = LOG_DIR / "client_messages_log.txt"
+```
+
+`REPO_ROOT` = carpeta que contiene `final_system` (`System`):
+
+```10:11:final_system/config/settings.py
+BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR.parent
+```
+
+- Borrar `client_messages_log/` en la raíz: pierdes historial; el sistema puede volver a crear la carpeta.  
+- No rompe el bot, solo los logs viejos.
+
+### 3. Fallback menor en migración
+
+`migrate_db.py` busca `menu_cache.json` en `final_system/data/` y, si no existe, en `System/data/`. Ya tienes caché en `final_system/data/`, así que en tu caso casi no importa.
+
+## Resumen práctico
+
+| Fuera de `final_system` | ¿Afecta al sistema en marcha? |
+|-------------------------|-------------------------------|
+| `app/`, `run.py`, README, prompts… | No (legacy/docs) |
+| `flows/restaurant_flow.json` | **Sí** — hoy es la única copia del flujo |
+| `client_messages_log/` | Solo logs (se recrean) |
+| `credentials/`, `data/` en raíz | No si usas los de `final_system` |
+| `.env` en raíz | No (usas `final_system/.env`) |
+
+**Conclusión:** puedes limpiar casi todo fuera de `final_system` **después de** mover `flows/restaurant_flow.json` dentro de `final_system` (y opcionalmente copiar logs si te importan). Si borras la raíz tal como está ahora, lo crítico es perder el JSON del flujo; el resto del SaaS en `final_system` seguiría intacto en código y datos, pero el backend del bot probablemente no arrancaría hasta arreglar `FLOWS_PATH`/el archivo.
+
+
+
+## tercer prompt ##
+
+ok entonces deja /final_system independiente sin depender de nada, osea no rompas nada ni modifiques nada solamente dejala totalmente independiente para que yo luego pueda borrar el resto de afuera sin problema (yo lo borro manualmente)
+
+
+## res cursor ## 
 
 
 
@@ -1159,9 +1425,5 @@ Sirve para cuando quiera un negocio nuevo en producción
 
 
 
-
-
-
-
-
+##############################################
 

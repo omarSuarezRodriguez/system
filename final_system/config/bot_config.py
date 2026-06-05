@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 from config.prompts import get_prompt
-from config.settings import BASE_DIR, REPO_ROOT, RESTAURANT_NAME
+from config.settings import BASE_DIR, RESTAURANT_NAME
 
 GLOBAL_COMMANDS = frozenset({"menu", "pedido", "reservar", "inicio", "cancelar"})
 
@@ -29,14 +29,14 @@ def resolve_flows_path() -> Path:
         if not flows_env.startswith(("/", "\\")) and ":" not in flows_env[:3]:
             return (BASE_DIR / flows_env).resolve()
         return path.resolve()
-    return REPO_ROOT / "flows" / "restaurant_flow.json"
+    return BASE_DIR / "flows" / "restaurant_flow.json"
 
 
 FLOWS_PATH = resolve_flows_path()
 
 # -----------------------------------------------------------------------------
 # GUÍA RÁPIDA
-# - Entrada: FLOWS_PATH en .env o flows/restaurant_flow.json en repo raíz.
+# - Entrada: FLOWS_PATH en .env o flows/restaurant_flow.json bajo final_system/.
 # - Salida: FLOWS_PATH, NAV_HINT, RESTAURANT_NAME para flow_engine.
 # - El dueño edita textos en Flutter; flujo JSON/BD en fases posteriores.
 # -----------------------------------------------------------------------------

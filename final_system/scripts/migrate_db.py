@@ -29,8 +29,6 @@ from services import menu_service as menu_svc  # noqa: E402
 def _seed_menu_from_cache(db, business_id: str) -> int:
     cache_path = DATA_DIR / "menu_cache.json"
     if not cache_path.exists():
-        cache_path = BASE_DIR.parent / "data" / "menu_cache.json"
-    if not cache_path.exists():
         return 0
     try:
         items = json.loads(cache_path.read_text(encoding="utf-8"))

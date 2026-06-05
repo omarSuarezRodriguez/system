@@ -8,7 +8,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-REPO_ROOT = BASE_DIR.parent
+# Raíz autocontenida de final_system (logs, flows por defecto, etc.)
+REPO_ROOT = BASE_DIR
 load_dotenv(BASE_DIR / ".env")
 
 # API / server
@@ -91,7 +92,7 @@ def use_rest_webhook_replies() -> bool:
 
 # -----------------------------------------------------------------------------
 # GUÍA RÁPIDA
-# - Entrada: variables en final_system/.env (migradas del bot en raíz).
+# - Entrada: variables en final_system/.env.
 # - Salida: constantes usadas por api/, services/, infrastructure/, chatbot shim.
 # - Solo secrets y URLs en .env; no hardcodear tokens aquí.
 # - Fase 3: única fuente para Twilio, admin, JWT, paths y servidor.

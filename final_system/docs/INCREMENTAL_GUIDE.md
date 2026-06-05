@@ -43,7 +43,7 @@
 - [x] `business_id` opcional en payload (passthrough)
 - [x] `chatbot/runtime.py` — singleton servicios
 - [x] `scripts/validate_chatbot.py`
-- [x] Rutas `DATA_DIR` / `FLOWS_PATH` apuntan a `final_system/` y repo raíz
+- [x] Rutas `DATA_DIR` / `FLOWS_PATH` / `REPO_ROOT` apuntan solo a `final_system/`
 
 **Validar:** `python scripts/validate_chatbot.py` desde `final_system/`.
 
