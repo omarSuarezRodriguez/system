@@ -160,3 +160,36 @@ class MenuAppOut(BaseModel):
 
 class MenuAppUpdate(BaseModel):
     items: list[dict[str, Any]]
+
+
+# --- Google Sheets optional mirror (Fase 8) ---
+
+
+class SheetsStatusOut(BaseModel):
+    global_enabled: bool
+    business_enabled: bool
+    active: bool
+    spreadsheet_id: str | None
+    sheets_connected: bool
+    cache: dict[str, Any] = Field(default_factory=dict)
+
+
+class SheetsSettingsUpdate(BaseModel):
+    sheets_enabled: bool
+    google_spreadsheet_id: str | None = None
+
+
+class SheetsSyncResult(BaseModel):
+    ok: bool
+    skipped: bool = False
+    message: str = ""
+    items_synced: int | None = None
+    orders_synced: int | None = None
+    errors: int | None = None
+
+
+class SheetsSyncAllOut(BaseModel):
+    ok: bool
+    skipped: bool = False
+    menu: SheetsSyncResult
+    orders: SheetsSyncResult

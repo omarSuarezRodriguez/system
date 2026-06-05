@@ -47,6 +47,7 @@ from services import conversation_service as conv_svc
 from services import menu_service as menu_svc
 from services import notification_service as notify_svc
 from services import order_service as order_svc
+from services import sheets_sync_service as sheets_svc
 
 router = APIRouter(prefix="/whatsbot", tags=["whatsbot"])
 
@@ -181,6 +182,7 @@ def put_business_menu(
     _require_business(db, business_id)
     items = menu_svc.replace_menu_items(db, business_id, body.items)
     db.commit()
+    sheets_svc.maybe_sync_menu_after_update(db, business_id)
     return MenuAppOut(items=items)
 
 

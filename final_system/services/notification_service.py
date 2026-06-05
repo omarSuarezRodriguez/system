@@ -103,6 +103,14 @@ def mirror_order_to_database(
                 delivery_type=str(order_payload.get("delivery_type", "")),
             )
             logger.debug("Order %s mirrored to DB for business %s", order_id, bid)
+            try:
+                from infrastructure.database import session_scope
+                from services import sheets_sync_service as sheets_svc
+
+                with session_scope() as sync_db:
+                    sheets_svc.maybe_sync_order_after_update(sync_db, bid, order_payload)
+            except Exception:
+                logger.debug("Sheets order mirror skipped (non-fatal)", exc_info=True)
     except Exception:
         logger.exception("mirror_order_to_database failed for %s (non-fatal)", order_id)
 

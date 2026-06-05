@@ -124,6 +124,25 @@ Variable nueva: `WHATSBOT_OWNER_PIN` (login app; no exponer en chat).
 
 ---
 
-## Fases 8–10
+## Fase 8 — Google Sheets opcional ✅
+
+- [x] `services/sheets_sync_service.py` — espejo BD→Sheets; `GOOGLE_SHEETS_ENABLED=false` por defecto
+- [x] `api/routes/sheets.py` — status, settings, sync (JWT)
+- [x] `GoogleSheetsClient.replace_menu_mirror` / `upsert_order_mirror` (legacy extendido)
+- [x] Hooks no bloqueantes: PUT menú app + pedido en BD
+- [x] `tests/test_sheets_api.py`
+- [x] `validate_chatbot.py` → 0 fallos
+
+```bash
+cd final_system
+python -m pytest tests/test_sheets_api.py -v
+python scripts/validate_chatbot.py
+```
+
+Con Sheets apagado el sistema funciona igual (PostgreSQL + chatbot con caché/demo).
+
+---
+
+## Fases 9–10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.

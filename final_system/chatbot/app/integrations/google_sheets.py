@@ -1299,6 +1299,92 @@ class GoogleSheetsClient:
         self._save_local_reservations()
         return reservation_id
 
+    def replace_menu_mirror(self, items: List[Dict[str, Any]]) -> bool:
+        """
+        Overwrite MENU worksheet from PostgreSQL mirror (SaaS Fase 8).
+        Entrada: filas estilo BD/app. Salida: hoja MENU + caché local actualizada.
+        """
+        if not self._connected:
+            return False
+        sheet = self._get_sheet("MENU")
+        if not sheet:
+            return False
+        headers = SHEET_HEADERS["MENU"]
+        normalized: List[Dict[str, Any]] = []
+        rows: List[List[Any]] = []
+        for item in items:
+            row_item = {
+                "id": str(item.get("id", item.get("external_id", ""))),
+                "nombre": str(item.get("nombre", "")).strip(),
+                "precio": float(item.get("precio", 0) or 0),
+                "categoria": str(item.get("categoria", "")).strip(),
+                "disponible": self._parse_bool(item.get("disponible", True)),
+            }
+            normalized.append(row_item)
+            rows.append(
+                [
+                    row_item["id"],
+                    row_item["nombre"],
+                    row_item["precio"],
+                    row_item["categoria"],
+                    "true" if row_item["disponible"] else "false",
+                ]
+            )
+        try:
+            sheet.clear()
+            sheet.append_row(headers)
+            if rows:
+                sheet.append_rows(rows, value_input_option="USER_ENTERED")
+            with self._cache_lock:
+                self._menu_cache = normalized
+            self._save_local_menu(normalized)
+            logger.info("Menu mirror pushed to Sheets: %d items", len(normalized))
+            return True
+        except Exception as exc:
+            logger.error("replace_menu_mirror failed: %s", exc)
+            return False
+
+    def upsert_order_mirror(self, order: Dict[str, Any]) -> bool:
+        """
+        Push/update one order row from BD to ORDERS sheet (mirror, no-op if offline).
+        """
+        order_id = str(order.get("order_id", "")).strip().upper()
+        if not order_id:
+            return False
+        if not self._connected:
+            return False
+
+        ts = order.get("timestamp") or order.get("created_at")
+        if hasattr(ts, "isoformat"):
+            ts = ts.isoformat()
+        payload = {
+            "order_id": order_id,
+            "wa_id": str(order.get("wa_id", "")),
+            "items": order.get("items") or [],
+            "total": float(order.get("total") or 0),
+            "status": str(order.get("status", "pending")),
+            "timestamp": str(ts or datetime.utcnow().isoformat()),
+            "customer_name": str(order.get("customer_name", "")),
+            "address": str(order.get("address", "")),
+            "delivery_type": str(order.get("delivery_type", "")),
+        }
+
+        with self._cache_lock:
+            had_row = order_id in self._order_row_index
+            self._orders_local[order_id] = payload
+
+        if had_row:
+            return self._update_order_status_on_sheets(order_id, payload["status"])
+
+        with self._cache_lock:
+            self._dirty_new_orders.add(order_id)
+        self._save_local_orders()
+        try:
+            return self._create_order_on_sheets(order_id)
+        except Exception as exc:
+            logger.warning("upsert_order_mirror failed for %s: %s", order_id, exc)
+            return False
+
 
 _sheets_client_singleton: Optional[GoogleSheetsClient] = None
 _sheets_client_lock = threading.Lock()
