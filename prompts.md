@@ -829,6 +829,73 @@ validate_chatbot.py → 0 fallos
 ## v0.10 Prompt 10 — Fase 9: App Flutter WhatsBot (UI WhatsApp)
 
 
+## Fase 9 completada — Flutter WhatsBot
+
+Proyecto creado en `final_system/whatsbot_app/` (solo Android/iOS).
+
+### Entregables
+
+| Componente | Detalle |
+|------------|---------|
+| **UI WhatsApp** | Header `#075E54`, fondo chat `#ECE5DD`, burbujas `#DCF8C6` / blanco |
+| **Pantallas** | Login, lista chats, chat, barra aprobar/rechazar pedido, ajustes |
+| **Editores** | Menú, Intents, Mensajes → `GET/PUT /whatsbot/business/*` |
+| **API** | `lib/services/api_client.dart` con JWT |
+| **Config** | `api_config.dart` → `http://127.0.0.1:5000` (desde `API_PUBLIC_URL` del `.env`) |
+| **Polling** | Chat cada 4 s, lista cada 8 s |
+| **Docs** | `docs/FLUTTER_APP.md`, `docs/GUIA_EDICION_APP.md`, nota en `INCREMENTAL_GUIDE.md` |
+
+### Validación `flutter analyze`
+
+```
+Analyzing whatsbot_app...
+No issues found! (ran in 2.8s)
+```
+
+### Arranque
+
+```bash
+# Backend
+cd final_system
+python -m api.main
+
+# App
+cd final_system/whatsbot_app
+flutter pub get
+flutter run
+```
+
+**Login:** `business_id` = `default`, PIN = valor de `WHATSBOT_OWNER_PIN` en el `.env` del servidor (default: `changeme`).
+
+**Emulador Android:** cambia `apiBaseUrl` a `http://10.0.2.2:5000` en `lib/config/api_config.dart`.
+
+### Prueba manual (checklist)
+
+1. Login → abrir conversación → enviar mensaje → aprobar/rechazar pedido si hay barra amarilla.
+2. **Ajustes → Menú** → editar producto → Guardar → el bot usará el menú nuevo en el próximo *menu* del cliente.
+3. **Ajustes → Mensajes** → cambiar bienvenida → Guardar → el próximo cliente verá el texto nuevo.
+
+Tutorial para el dueño: `docs/GUIA_EDICION_APP.md`.
+
+---
+
+¿Procedo con la Fase 10?
+
+
+
+
+
+
+
+
+##################################################
+## v0.11 Prompt 11 — Fase 10: Validación final + guías
+
+
+
+
+
+
 
 
 

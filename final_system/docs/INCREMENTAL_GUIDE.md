@@ -164,6 +164,44 @@ Prueba manual: login → chat → enviar → aprobar pedido; Menú → guardar; 
 
 ---
 
-## Fase 10
+## Fase 10 — Validación + documentación ✅
 
-Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.
+**Hecho:**
+
+- [x] `scripts/validate_system.py` — gateway + API + flujo pedido + edición BD
+- [x] `validate_chatbot.py`, `validate_api.py`, `validate_system.py` → 0 fallos
+- [x] `pytest tests/` → 15 passed
+- [x] `README.md` completo (guía 15 líneas, credenciales, backend, Flutter, E2E)
+- [x] `docs/GUIA_NEGOCIOS.md` — alta de negocio paso a paso
+- [x] `docs/GUIA_EDICION_APP.md` — dueño edita menú/intents/mensajes solo desde app
+- [x] `docs/INCREMENTAL_GUIDE.md` (este archivo)
+- [x] `docs/FLUTTER_APP.md` — app documentada
+- [x] API arranca con `DATABASE_URL=sqlite:///data/whatsbot.db` (dev local sin PostgreSQL)
+- [x] `flutter analyze` → No issues found
+
+**Checklist E2E (prompt maestro):**
+
+| Ítem | Automatizado | Manual (Twilio real) |
+|------|--------------|----------------------|
+| Cliente → bot responde | `validate_system` gateway | Probar WhatsApp |
+| Mensaje en app Flutter | webhook + `/whatsbot/conversations` | `flutter run` |
+| Dueño responde desde app | API `/whatsbot/messages` | App + teléfono |
+| Pedido → admin legacy | `validate_system` notify | ADMIN_WHATSAPP |
+| Aprobar desde Flutter | `validate_system` approve | App |
+| Aprobar desde ADMIN | `test_order_confirmation_flow` | WhatsApp admin |
+| Sheets deshabilitado OK | `test_sheets_api` | — |
+| Editar menú en app | `validate_system` menu BD | App → Menú |
+| Editar intent en app | `test_whatsbot_api` intents | App → Intents |
+| Editar bienvenida/mensajes | `validate_system` prompts BD | App → Mensajes |
+
+```bash
+cd final_system
+python scripts/validate_chatbot.py
+python scripts/validate_api.py
+python scripts/validate_system.py
+python -m pytest tests/ -v
+cd whatsbot_app && flutter analyze
+python -m api.main   # con .env y migrate_db
+```
+
+**Métrica de éxito:** junior arranca API + app con README, ve chats, responde, confirma pedidos, da de alta negocio y edita bot solo desde Flutter — sin UI web.
