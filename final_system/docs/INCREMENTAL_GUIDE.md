@@ -89,7 +89,18 @@
 
 ---
 
-## Fase 6 — Pedidos + admin (pendiente)
+## Fase 6 — Pedidos + admin ✅
+
+- [x] `services/notification_service.py` — fachada sobre `AdminService` legacy (notify, confirm, espejo BD)
+- [x] `flow_engine` → `on_order_pending()` tras pedido pendiente
+- [x] `gateway.py` — admin vía `notification_service` (mismo flujo: cliente → admin → CONFIRMAR → cliente)
+- [x] `tests/test_order_confirmation_flow.py` — 3 tests OK
+- [x] `validate_chatbot.py` → 0 fallos
+
+```bash
+python -m pytest tests/test_order_confirmation_flow.py -v
+python scripts/validate_chatbot.py
+```
 
 ---
 

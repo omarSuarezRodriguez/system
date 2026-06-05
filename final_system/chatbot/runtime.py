@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-# Ensure chatbot/app is importable as package `app`
+# final_system root (services/, config/) + chatbot/app as package `app`
+_FS_ROOT = Path(__file__).resolve().parent.parent
 _CHATBOT_ROOT = Path(__file__).resolve().parent
-if str(_CHATBOT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_CHATBOT_ROOT))
+for _path in (_FS_ROOT, _CHATBOT_ROOT):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
 from app.config import (  # noqa: E402
     GOOGLE_SHEETS_CREDENTIALS_PATH,

@@ -33,6 +33,7 @@ from config.settings import use_rest_webhook_replies
 
 from chatbot.runtime import get_bot_context
 from app.utils.client_message_log import schedule_client_message_log
+from services import notification_service as notify_svc
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ def handle_incoming_message(payload: dict) -> dict:
         or metadata.get("ProfileName")
         or ""
     )
-    business_id = payload.get("business_id")
+    business_id = payload.get("business_id") or None
     channel = payload.get("channel") or "whatsapp"
     timestamp = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
 
@@ -117,9 +118,12 @@ def handle_incoming_message(payload: dict) -> dict:
         sender_ids = [wa_id]
         if from_number and from_number != wa_id:
             sender_ids.append(from_number)
-        if any(admin_service.is_admin(sender) for sender in sender_ids):
+        if any(notify_svc.is_admin_sender(sender) for sender in sender_ids):
             is_admin = True
-            reply = admin_service.handle_admin_message(body)
+            reply = notify_svc.handle_admin_confirmation(
+                body,
+                business_id=business_id,
+            )
         elif blocked_cache.is_blocked(wa_id):
             blocked = True
             schedule_client_message_log(

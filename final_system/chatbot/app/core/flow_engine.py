@@ -630,7 +630,9 @@ class FlowEngine:
             "address": address,
             "delivery_type": delivery_type,
         }
-        self.admin_service.notify_new_order(order_payload)
+        from services.notification_service import on_order_pending
+
+        on_order_pending(order_payload)
 
         self.state_manager.patch_data(
             wa_id,
