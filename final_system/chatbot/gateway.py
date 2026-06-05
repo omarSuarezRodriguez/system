@@ -28,9 +28,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Union
 
-from config.prompts import get_prompt
 from config.settings import use_rest_webhook_replies
 
+from chatbot.business_context import business_scope, get_prompt
 from chatbot.runtime import get_bot_context
 from app.utils.client_message_log import schedule_client_message_log
 from services import notification_service as notify_svc
@@ -115,31 +115,32 @@ def handle_incoming_message(payload: dict) -> dict:
     reply: Reply = ""
 
     try:
-        sender_ids = [wa_id]
-        if from_number and from_number != wa_id:
-            sender_ids.append(from_number)
-        if any(notify_svc.is_admin_sender(sender) for sender in sender_ids):
-            is_admin = True
-            reply = notify_svc.handle_admin_confirmation(
-                body,
-                business_id=business_id,
-            )
-        elif blocked_cache.is_blocked(wa_id):
-            blocked = True
-            schedule_client_message_log(
-                wa_id=wa_id,
-                client_message=(body or "").strip(),
-                bot_message="(usuario bloqueado — sin respuesta)",
-            )
-            reply = ""
-        else:
-            user_service.touch(wa_id=wa_id, name=profile_name)
-            reply = flow_engine.process_message(wa_id=wa_id, body=body)
+        with business_scope(business_id):
+            sender_ids = [wa_id]
+            if from_number and from_number != wa_id:
+                sender_ids.append(from_number)
+            if any(notify_svc.is_admin_sender(sender) for sender in sender_ids):
+                is_admin = True
+                reply = notify_svc.handle_admin_confirmation(
+                    body,
+                    business_id=business_id,
+                )
+            elif blocked_cache.is_blocked(wa_id):
+                blocked = True
+                schedule_client_message_log(
+                    wa_id=wa_id,
+                    client_message=(body or "").strip(),
+                    bot_message="(usuario bloqueado — sin respuesta)",
+                )
+                reply = ""
+            else:
+                user_service.touch(wa_id=wa_id, name=profile_name)
+                reply = flow_engine.process_message(wa_id=wa_id, body=body)
+            reply = _normalize_reply(reply)
     except Exception:
         logger.exception("Gateway error processing message for wa_id=%s", wa_id)
-        reply = get_prompt("error_generic")
-
-    reply = _normalize_reply(reply)
+        with business_scope(business_id):
+            reply = get_prompt("error_generic")
 
     if not is_admin and not blocked and wa_id:
         schedule_client_message_log(

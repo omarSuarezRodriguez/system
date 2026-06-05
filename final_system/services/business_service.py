@@ -214,3 +214,43 @@ def get_business_prompts(db: Session, business_id: str) -> dict[str, str]:
     if row and row.config_json:
         return {k: str(v) for k, v in row.config_json.items()}
     return serialize_default_prompts()
+
+
+def set_business_intents(
+    db: Session,
+    business_id: str,
+    config_json: dict[str, Any],
+) -> dict[str, Any]:
+    """Persist intents editados desde app Flutter."""
+    row = (
+        db.query(BusinessIntentConfig)
+        .filter(BusinessIntentConfig.business_id == business_id)
+        .one_or_none()
+    )
+    if row is None:
+        row = BusinessIntentConfig(business_id=business_id, config_json=config_json)
+        db.add(row)
+    else:
+        row.config_json = config_json
+    db.flush()
+    return row.config_json
+
+
+def set_business_prompts(
+    db: Session,
+    business_id: str,
+    config_json: dict[str, str],
+) -> dict[str, str]:
+    """Persist textos del bot editados desde app Flutter."""
+    row = (
+        db.query(BusinessPromptConfig)
+        .filter(BusinessPromptConfig.business_id == business_id)
+        .one_or_none()
+    )
+    if row is None:
+        row = BusinessPromptConfig(business_id=business_id, config_json=config_json)
+        db.add(row)
+    else:
+        row.config_json = config_json
+    db.flush()
+    return {k: str(v) for k, v in row.config_json.items()}

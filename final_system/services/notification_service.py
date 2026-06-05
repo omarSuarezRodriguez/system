@@ -125,3 +125,64 @@ def confirm_order_updates_database(
                 db_orders.update_order_status(db, row, status)
     except Exception:
         logger.exception("confirm_order_updates_database failed for %s", order_id)
+
+
+def approve_order_from_app(
+    order_id: str,
+    *,
+    business_id: str | None = None,
+) -> dict[str, str]:
+    """
+    Dueño aprueba desde Flutter: confirma en Sheets (legacy) + BD + avisa cliente.
+    """
+    oid = order_id.upper().strip()
+    bid = (business_id or DEFAULT_BUSINESS_ID or "default").strip()
+    admin = _admin_service()
+    order = admin.order_service.get_order(oid)
+    if not order:
+        return {"ok": False, "message": f"No encontré el pedido {oid}."}
+    if order.get("status") == "confirmed":
+        confirm_order_updates_database(oid, business_id=bid, status="confirmed")
+        return {"ok": True, "message": f"El pedido {oid} ya estaba confirmado."}
+    if not admin.order_service.confirm_order(oid):
+        return {"ok": False, "message": f"No pude confirmar el pedido {oid}."}
+    confirm_order_updates_database(oid, business_id=bid, status="confirmed")
+    customer = admin._customer_wa_id(order)
+    if customer:
+        body = (
+            f"Tu pedido *{oid}* fue confirmado por el restaurante. "
+            "¡Gracias por tu compra!"
+        )
+        admin._send_whatsapp(customer, body)
+    return {"ok": True, "message": f"Pedido {oid} confirmado."}
+
+
+def reject_order_from_app(
+    order_id: str,
+    *,
+    business_id: str | None = None,
+    reason: str = "",
+) -> dict[str, str]:
+    """Dueño rechaza desde Flutter: BD + mensaje al cliente."""
+    oid = order_id.upper().strip()
+    bid = (business_id or DEFAULT_BUSINESS_ID or "default").strip()
+    admin = _admin_service()
+    order = admin.order_service.get_order(oid)
+    try:
+        from infrastructure.database import session_scope
+        from services import order_service as db_orders
+
+        with session_scope() as db:
+            row = db_orders.get_order(db, bid, oid)
+            if row:
+                db_orders.update_order_status(db, row, "rejected")
+    except Exception:
+        logger.exception("reject_order_from_app BD update failed for %s", oid)
+    customer = admin._customer_wa_id(order) if order else ""
+    if customer:
+        extra = f" Motivo: {reason}" if reason else ""
+        admin._send_whatsapp(
+            customer,
+            f"Lo sentimos, tu pedido *{oid}* no pudo ser confirmado.{extra}",
+        )
+    return {"ok": True, "message": f"Pedido {oid} rechazado."}

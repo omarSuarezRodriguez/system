@@ -25,12 +25,31 @@ class MenuService:
             return 0.0
         return _MENU_CACHE_PATH.stat().st_mtime
 
+    @staticmethod
+    def _context_menu_override() -> Optional[List[Dict[str, Any]]]:
+        try:
+            from chatbot.business_context import get_active_menu
+
+            override = get_active_menu()
+            if override is not None:
+                return [item for item in override if item.get("disponible", True)]
+        except ImportError:
+            pass
+        return None
+
     def _fetch_available_menu(self) -> List[Dict[str, Any]]:
+        override = self._context_menu_override()
+        if override is not None:
+            return override
         return [
             item for item in self.sheets.get_menu() if item.get("disponible", True)
         ]
 
     def _refresh_available_menu_if_stale(self) -> List[Dict[str, Any]]:
+        override = self._context_menu_override()
+        if override is not None:
+            return override
+
         mtime = self._menu_cache_mtime()
         if (
             self._available_menu_cache is not None
@@ -83,11 +102,17 @@ class MenuService:
         return self._literal_tokens_cache
 
     def format_menu(self) -> str:
-        mtime = self._menu_cache_mtime()
-        if self._formatted_menu_cache is not None and self._formatted_menu_mtime == mtime:
-            return self._formatted_menu_cache
-
-        menu = self.get_available_menu()
+        override = self._context_menu_override()
+        if override is None:
+            mtime = self._menu_cache_mtime()
+            if (
+                self._formatted_menu_cache is not None
+                and self._formatted_menu_mtime == mtime
+            ):
+                return self._formatted_menu_cache
+            menu = self.get_available_menu()
+        else:
+            menu = override
         if not menu:
             formatted = (
                 "Por el momento no tenemos platos disponibles. Intenta más tarde."
@@ -107,6 +132,7 @@ class MenuService:
 
             formatted = "\n".join(lines).strip()
 
-        self._formatted_menu_cache = formatted
-        self._formatted_menu_mtime = mtime
+        if override is None:
+            self._formatted_menu_cache = formatted
+            self._formatted_menu_mtime = self._menu_cache_mtime()
         return formatted

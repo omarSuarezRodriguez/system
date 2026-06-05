@@ -161,3 +161,48 @@ def save_outgoing_message(
             customer_wa_id,
         )
     return saved
+
+
+def list_conversations(
+    db: Session,
+    business_id: str,
+    *,
+    limit: int = 100,
+) -> list[Conversation]:
+    return (
+        db.query(Conversation)
+        .filter(Conversation.business_id == _normalize_business_id(business_id))
+        .order_by(Conversation.last_message_at.desc().nullslast(), Conversation.updated_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_conversation_for_business(
+    db: Session,
+    business_id: str,
+    conversation_id: int,
+) -> Conversation | None:
+    return (
+        db.query(Conversation)
+        .filter(
+            Conversation.id == conversation_id,
+            Conversation.business_id == _normalize_business_id(business_id),
+        )
+        .one_or_none()
+    )
+
+
+def list_messages(
+    db: Session,
+    conversation_id: int,
+    *,
+    limit: int = 200,
+) -> list[Message]:
+    return (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+        .limit(limit)
+        .all()
+    )

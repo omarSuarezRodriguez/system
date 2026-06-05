@@ -104,6 +104,26 @@ python scripts/validate_chatbot.py
 
 ---
 
-## Fases 7–10
+## Fase 7 — API WhatsBot ✅
+
+- [x] `api/routes/auth.py` — `POST /auth/login` (JWT + `business_id`)
+- [x] `api/middleware/auth.py` — Bearer obligatorio en `/whatsbot/*`
+- [x] `api/routes/whatsbot.py` — chats, mensajes, pedidos, menú/intents/prompts por negocio
+- [x] `chatbot/gateway.py` + `business_context.py` — menú/intents/prompts desde BD (fallback `config/*`)
+- [x] CORS ya en `api/main.py` (`CORS_ORIGINS`)
+- [x] `tests/test_whatsbot_api.py` — PUT menu/intents/prompts + gateway BD
+- [x] `docs/FLUTTER_APP.md`, `docs/GUIA_EDICION_APP.md` (borradores)
+
+```bash
+cd final_system
+python -m pytest tests/test_whatsbot_api.py -v
+python scripts/validate_chatbot.py
+```
+
+Variable nueva: `WHATSBOT_OWNER_PIN` (login app; no exponer en chat).
+
+---
+
+## Fases 8–10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.

@@ -33,6 +33,8 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", ""))
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
 SECRET_KEY = os.getenv("SECRET_KEY", JWT_SECRET_KEY)
+# PIN para login app Flutter (dueño); en prod usar valor fuerte en .env
+WHATSBOT_OWNER_PIN = os.getenv("WHATSBOT_OWNER_PIN", "changeme")
 
 # Branding (legacy RESTAURANT_NAME → DEFAULT_BUSINESS_NAME)
 RESTAURANT_NAME = os.getenv(

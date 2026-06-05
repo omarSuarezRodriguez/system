@@ -24,7 +24,7 @@ _FS = Path(__file__).resolve().parent.parent
 if str(_FS) not in sys.path:
     sys.path.insert(0, str(_FS))
 
-from api.routes import businesses, menus, orders, whatsapp  # noqa: E402
+from api.routes import auth, businesses, menus, orders, whatsapp, whatsbot  # noqa: E402
 from config.settings import (  # noqa: E402
     API_PUBLIC_URL,
     CORS_ORIGINS,
@@ -65,7 +65,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="WhatsBot API",
         description="Backend JSON + webhook Twilio (sin UI web)",
-        version="0.5.0",
+        version="0.7.0",
         lifespan=lifespan,
     )
 
@@ -79,6 +79,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(whatsapp.router)
+    app.include_router(auth.router)
+    app.include_router(whatsbot.router)
     app.include_router(businesses.router)
     app.include_router(menus.router)
     app.include_router(orders.router)
@@ -88,7 +90,7 @@ def create_app() -> FastAPI:
         return {
             "status": "ok",
             "service": "whatsbot-api",
-            "version": "0.5.0",
+            "version": "0.7.0",
             "restaurant": RESTAURANT_NAME,
             "default_business_id": DEFAULT_BUSINESS_ID,
             "api_public_url": API_PUBLIC_URL,

@@ -88,3 +88,75 @@ class OrderCreate(BaseModel):
     customer_name: str = ""
     address: str = ""
     delivery_type: str = ""
+
+
+# --- WhatsBot app (Fase 7) ---
+
+
+class ConversationOut(BaseModel):
+    id: int
+    business_id: str
+    customer_wa_id: str
+    customer_name: str | None
+    last_message_preview: str | None
+    last_message_at: datetime | None
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class MessageOut(BaseModel):
+    id: int
+    conversation_id: int
+    direction: str
+    body: str
+    wa_id: str
+    is_admin: bool
+    channel: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class OwnerMessageCreate(BaseModel):
+    customer_wa_id: str = Field(..., min_length=8)
+    body: str = Field(..., min_length=1)
+
+
+class OrderActionResponse(BaseModel):
+    ok: bool
+    message: str
+
+
+class BusinessMeOut(BaseModel):
+    id: str
+    name: str
+    twilio_whatsapp_from: str
+    admin_whatsapp_number: str
+    sheets_enabled: bool
+
+    model_config = {"from_attributes": True}
+
+
+class IntentsConfigOut(BaseModel):
+    config: dict[str, Any]
+
+
+class IntentsConfigUpdate(BaseModel):
+    config: dict[str, Any]
+
+
+class PromptsConfigOut(BaseModel):
+    config: dict[str, str]
+
+
+class PromptsConfigUpdate(BaseModel):
+    config: dict[str, str]
+
+
+class MenuAppOut(BaseModel):
+    items: list[MenuItemOut]
+
+
+class MenuAppUpdate(BaseModel):
+    items: list[dict[str, Any]]
