@@ -26,18 +26,28 @@ Sin valores aquí — ver `final_system/.env` (gitignore):
 - Nuevo SaaS: `DATABASE_URL`, `JWT_SECRET_KEY`, `API_PUBLIC_URL`, `CORS_ORIGINS`
 - Semilla negocio: `DEFAULT_BUSINESS_NAME` (desde `RESTAURANT_NAME` legacy)
 
-## Backend (cuando esté listo — Fase 4+)
+## Backend API (Fase 4)
 
 ```bash
 cd final_system
-python -m venv venv
-venv\Scripts\activate
+..\venv\Scripts\activate   # o venv local
 pip install -r requirements.txt
-# Configurar PostgreSQL y DATABASE_URL en .env
-python -m api.main
+python scripts/migrate_db.py   # crea tablas
+python -m api.main             # FastAPI en HOST:PORT (.env)
 ```
 
-Webhook Twilio: `{API_PUBLIC_URL}/webhook` (ruta final en Fase 4; legacy sigue en `/bot` en raíz).
+Webhook Twilio: `{API_PUBLIC_URL}/webhook` (alias `POST /bot`).
+
+Sin PostgreSQL local: `DATABASE_URL=sqlite:///data/whatsbot.db` en `.env`.
+
+Validación:
+
+```bash
+python scripts/validate_chatbot.py
+python scripts/validate_api.py
+```
+
+El bot legacy en la raíz (`python run.py`) sigue operativo en paralelo.
 
 ## App WhatsBot (Flutter — Fase 9)
 

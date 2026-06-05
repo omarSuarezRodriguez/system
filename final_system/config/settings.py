@@ -40,6 +40,7 @@ RESTAURANT_NAME = os.getenv(
     os.getenv("DEFAULT_BUSINESS_NAME", "La Casa del Sabor"),
 )
 DEFAULT_BUSINESS_NAME = os.getenv("DEFAULT_BUSINESS_NAME", RESTAURANT_NAME)
+DEFAULT_BUSINESS_ID = os.getenv("DEFAULT_BUSINESS_ID", "default").strip() or "default"
 
 # Twilio
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()

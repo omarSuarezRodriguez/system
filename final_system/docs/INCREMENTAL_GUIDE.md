@@ -62,12 +62,25 @@
 
 ---
 
-## Fase 4 — API webhook (pendiente)
+## Fase 4 — API webhook ✅
 
-- [ ] FastAPI + `whatsapp.py` → gateway
+- [x] `api/main.py` (FastAPI + CORS + `/health`)
+- [x] `api/routes/whatsapp.py` → gateway + persistencia BD
+- [x] `infrastructure/twilio_client.py` (TwiML + REST)
+- [x] `models/conversation.py`, `models/message.py`
+- [x] `services/conversation_service.py` (incoming + outgoing)
+- [x] `scripts/migrate_db.py`, `scripts/validate_api.py`
+- [x] `validate_chatbot.py` → 0 fallos
+
+**Arranque:** `cd final_system && python -m api.main`  
+**Webhook Twilio:** `{API_PUBLIC_URL}/webhook` (o `/bot`)
 
 ---
 
-## Fases 5–10
+## Fase 5 — Multi-negocio (pendiente)
+
+---
+
+## Fases 6–10
 
 Ver `PROMPT_EVOLUCION_SAAS_WHATSBOT.md` sección 9.
